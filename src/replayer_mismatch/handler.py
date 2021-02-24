@@ -5,7 +5,8 @@ import argparse
 import sys
 import socket
 import logging
-from query_rds import *
+
+from replayer_mismatch.query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -98,6 +99,20 @@ def get_parameter_store_value(parameter_name, region):
         raise e
 
 
+def dynamo_db_format(nino: str, transaction_id: str, additional_data: dict):
+    return {
+        "nino": nino,
+        "transaction_id": transaction_id,
+        "take_home_pay": additional_data[""],  # TODO: Find out about acquiring decrypted take home pay
+        "contract_id": additional_data["contractId"],
+        "assessment_period_from_date": additional_data["apStartDate"],
+        "assessment_period_to_date": additional_data["apEndDate"],
+        "suspended_date": additional_data["suspensionDate"],
+        "statement_created_date": additional_data["statementCreatedDate"]
+        # TODO: Find out about this key as it seems to have no references anywhere
+    }
+
+
 args = None
 logger = None
 
@@ -125,7 +140,6 @@ def handler(event, context):
     )
     ireland_additional_data = get_additional_record_data(
         nino,
-        transaction_id,
         ireland_connection
     )
 
@@ -138,27 +152,32 @@ def handler(event, context):
     )
     london_additional_data = get_additional_record_data(
         nino,
-        transaction_id,
         london_connection
     )
 
-    dynamodb_record_mismatch_record(ddb_client, ireland_additional_data, london_additional_data)
+    ireland_data = dynamo_db_format(nino, transaction_id, ireland_additional_data)
+    london_data = dynamo_db_format(nino, transaction_id, london_additional_data)
 
 
-def dynamodb_record_mismatch_record(dynamodb, ireland_additional_data, london_additional_data):
+    # dynamodb_record_mismatch_record(ddb_client, ireland_data, london_data)
+
+
+def dynamodb_record_mismatch_record(dynamodb, ireland_data, london_data):
     table = dynamodb.Table(args.ddb_record_mismatch_table)
 
     logger.info(
         f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{args.ddb_record_mismatch_table}", '
         f'"nino": {ireland_additional_data["nino"]}')
 
+    # TODO: Find out whether these keys are set in stone
+    # TODO: Also find out about acquiring decrypted take home pay
     response = table.put_item(
         Item={
             'nino': ireland_additional_data["nino"],
             'transaction_id': ireland_additional_data["transaction_id"],
             'decrypted_take_home_pay': ireland_additional_data["take_home_pay"],
-            "CONTRACT_ID_IRE": ireland_additional_data["ireland_additional_data"],
-            "CONTRACT_ID_LDN": ireland_additional_data["ireland_additional_data"],
+            "CONTRACT_ID_IRE": ireland_additional_data["contract_id"],
+            "CONTRACT_ID_LDN": london_additional_data["contract_id"],
             "AP_FROM_IRE": ireland_additional_data["assessment_period_from_date"],
             "AP_TO_IRE": ireland_additional_data["assessment_period_to_date"],
             "AP_FROM_LDN": london_additional_data["assessment_period_from_date"],

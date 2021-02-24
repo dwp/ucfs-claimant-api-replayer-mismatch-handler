@@ -1,12 +1,19 @@
-from replayer_lambda.config import get_parameter_store_value
 import mysql.connector
 import os
 
+logger = None
 
-def get_connection(rds_endpoint, username, password, database_name):
+
+def get_connection(rds_endpoint: str, username: str, password: str, database_name: str, use_ssl: str):
+    global logger
+
     script_dir = os.path.dirname(__file__)
     rel_path = "rds-ca-2019-root.pem"
     abs_file_path = os.path.join(script_dir, rel_path)
+
+    if logger is None:
+        from handler import logger as handler_logger
+        logger = handler_logger
 
     logger.info(f"Path to the CR cert is '{abs_file_path}'")
 
@@ -16,12 +23,12 @@ def get_connection(rds_endpoint, username, password, database_name):
         password=password,
         database=database_name,
         ssl_ca=abs_file_path,
-        ssl_verify_cert=True if args.use_ssl.lower() == "true" else False
+        ssl_verify_cert=True if use_ssl.lower() == "true" else False
     )
 
 
-def get_additional_record_data(nino, transaction_id, connection):
-    sql = f"""
+def get_additional_record_data(nino, connection):
+    query = f"""
     SELECT
       claimant.nino,
       contract.contract_id,
@@ -48,14 +55,13 @@ def get_additional_record_data(nino, transaction_id, connection):
     WHERE contract.data->>'$.closedDate' = 'null' AND nino = "{nino}"
     ORDER BY apStartDate DESC, statementCreatedDate DESC;
     """
-    response = execute_statement(sql, connection)
-    # TODO Pack results in a dict as expected by ddb func
-    packed_dict = {}
-    return packed_dict
 
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(query)
+    logger.info("Executed: {}".format(query))
 
-def execute_statement(sql, connection):
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    logger.info("Executed: {}".format(sql))
-    connection.commit()
+    response = cursor.fetchone()
+
+    cursor.close()
+
+    return response
