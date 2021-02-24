@@ -38,7 +38,7 @@ def setup_logging(logger_level):
 def get_parameters():
     parser = argparse.ArgumentParser(
         description="An AWS lambda which receives payload information of replayed mismatch records, "
-                    "and fetches additional information from both databases before recording in DynamoDb."
+        "and fetches additional information from both databases before recording in DynamoDb."
     )
 
     # Parse command line inputs and set defaults
