@@ -93,7 +93,7 @@ def handler(event, context):
     global logger
     logger = setup_logging(args.log_level)
 
-    logger.info(f"Event: {event}")
+    logger.info(f'Event", "event": "{event}')
 
 
 if __name__ == "__main__":
