@@ -14,6 +14,9 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: Install Tox
+        run: pip install tox
+
       - name: unit-tests
         run: make unittest
 
@@ -30,9 +33,6 @@ jobs:
 
       - name: Install Black
         run: pip install black
-
-      - name: Install Tox
-        run: pip install tox
 
       - name: Run black --check .
         id: check-formatting
