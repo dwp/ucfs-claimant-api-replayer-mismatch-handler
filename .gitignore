@@ -1,0 +1,8 @@
+.gitidea/
+.idea/
+dist/
+build/
+*.pyc
+*.egg-info
+venv/
+artifacts/
