@@ -42,7 +42,6 @@ def get_parameters():
     )
 
     # Parse command line inputs and set defaults
-    parser.add_argument("--aws-profile", default="default")
     parser.add_argument("--aws-region")
     parser.add_argument("--environment", default="NOT_SET")
     parser.add_argument("--application", default="NOT_SET")
@@ -51,11 +50,8 @@ def get_parameters():
     _args = parser.parse_args()
 
     # Override arguments with environment variables where set
-    if "AWS_PROFILE" in os.environ:
-        _args.aws_profile = os.environ["AWS_PROFILE"]
-
     if "AWS_REGION" in os.environ:
-        _args.aws_region = os.environ["AWS_PROFILE"]
+        _args.aws_region = os.environ["AWS_REGION"]
 
     if "ENVIRONMENT" in os.environ:
         _args.environment = os.environ["ENVIRONMENT"]
