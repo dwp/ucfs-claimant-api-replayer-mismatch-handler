@@ -12,8 +12,8 @@ def get_connection(rds_endpoint: str, username: str, password: str, database_nam
     abs_file_path = os.path.join(script_dir, rel_path)
 
     if logger is None:
-        from handler import logger as handler_logger
-        logger = handler_logger
+        from handler import logger as __logger
+        logger = __logger
 
     logger.info(f"Path to the CR cert is '{abs_file_path}'")
 
@@ -60,7 +60,7 @@ def get_additional_record_data(nino, connection):
     cursor.execute(query)
     logger.info("Executed: {}".format(query))
 
-    response = cursor.fetchone()
+    response = cursor.fetchall()
 
     cursor.close()
 

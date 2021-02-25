@@ -99,17 +99,28 @@ def get_parameter_store_value(parameter_name, region):
         raise e
 
 
-def dynamo_db_format(nino: str, transaction_id: str, additional_data: dict):
+def dynamo_db_format(
+        nino: str, transaction_id: str, take_home_pay: str, ireland_additional_data: dict, london_additional_data: dict
+):
     return {
-        "nino": nino,
-        "transaction_id": transaction_id,
-        "take_home_pay": additional_data[""],  # TODO: Find out about acquiring decrypted take home pay
-        "contract_id": additional_data["contractId"],
-        "assessment_period_from_date": additional_data["apStartDate"],
-        "assessment_period_to_date": additional_data["apEndDate"],
-        "suspended_date": additional_data["suspensionDate"],
-        "statement_created_date": additional_data["statementCreatedDate"]
-        # TODO: Find out about this key as it seems to have no references anywhere
+        'nino': nino,
+        'transaction_id': transaction_id,
+        'decrypted_take_home_pay': take_home_pay,
+
+        "contract_id_ire": ireland_additional_data["contractId"],
+        "contract_id_ldn": london_additional_data["contractId"],
+
+        "ap_start_date_ire": ireland_additional_data["apStartDate"],
+        "ap_end_date_ire": ireland_additional_data["apEndDate"],
+
+        "ap_start_date_ldn": london_additional_data["apStartDate"],
+        "ap_end_date_ldn": london_additional_data["apEndDate"],
+
+        "suspension_date_ire": ireland_additional_data["suspensionDate"],
+        "suspension_date_ldn": london_additional_data["suspensionDate"],
+
+        "statement_created_date_ire": ireland_additional_data["statementCreatedDate"],
+        "statement_created_date_ldn": london_additional_data["statementCreatedDate"]
     }
 
 
@@ -126,7 +137,8 @@ def handler(event, context):
     logger.info(f"Event: {event}")
 
     nino = json.loads(event["nino"])
-    transaction_id = json.loads(event["transactionId"])
+    transaction_id = json.loads(event["transaction_id"])
+    take_home_pay = json.loads(event["take_home_pay"])
 
     logger.info(
         f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}')
@@ -136,8 +148,10 @@ def handler(event, context):
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
-        args.ireland_database_name
+        args.ireland_database_name,
+        args.use_ssl
     )
+    # TODO: Figure out how to handle if multiple records are returned
     ireland_additional_data = get_additional_record_data(
         nino,
         ireland_connection
@@ -148,46 +162,43 @@ def handler(event, context):
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
-        args.london_database_name
+        args.london_database_name,
+        args.use_ssl
     )
+    # TODO: Figure out how to handle if multiple records are returned
     london_additional_data = get_additional_record_data(
         nino,
         london_connection
     )
 
-    ireland_data = dynamo_db_format(nino, transaction_id, ireland_additional_data)
-    london_data = dynamo_db_format(nino, transaction_id, london_additional_data)
+    try:
+        dynamodb_data = dynamo_db_format(
+            nino, transaction_id, take_home_pay, ireland_additional_data, london_additional_data
+        )
+
+        ddb = boto3.client("dynamodb")
+        table = ddb.Table(args.ddb_record_mismatch_table)
+
+        dynamodb_record_mismatch_record(table, dynamodb_data)
+    except KeyError as e:
+        logger.error('Error attempting to build dynamoDB data", '
+                     f'"ireland_additional_data": "{ireland_additional_data}", "missing_key": "{e.args[0]}",'
+                     f'"london_additional_data": "{london_additional_data}", "exception": "{e}')
+
+    except Exception as e:
+        logger.error('Error attempting to put dynamoDB record", '
+                     f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}')
 
 
-    # dynamodb_record_mismatch_record(ddb_client, ireland_data, london_data)
-
-
-def dynamodb_record_mismatch_record(dynamodb, ireland_data, london_data):
-    table = dynamodb.Table(args.ddb_record_mismatch_table)
-
+def dynamodb_record_mismatch_record(ddb_table, data):
     logger.info(
-        f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{args.ddb_record_mismatch_table}", '
-        f'"nino": {ireland_additional_data["nino"]}')
-
-    # TODO: Find out whether these keys are set in stone
-    # TODO: Also find out about acquiring decrypted take home pay
-    response = table.put_item(
-        Item={
-            'nino': ireland_additional_data["nino"],
-            'transaction_id': ireland_additional_data["transaction_id"],
-            'decrypted_take_home_pay': ireland_additional_data["take_home_pay"],
-            "CONTRACT_ID_IRE": ireland_additional_data["contract_id"],
-            "CONTRACT_ID_LDN": london_additional_data["contract_id"],
-            "AP_FROM_IRE": ireland_additional_data["assessment_period_from_date"],
-            "AP_TO_IRE": ireland_additional_data["assessment_period_to_date"],
-            "AP_FROM_LDN": london_additional_data["assessment_period_from_date"],
-            "AP_TO_LDN": london_additional_data["assessment_period_to_date"],
-            "SUSPENDED_DATE_IRE": ireland_additional_data["suspended_date"],
-            "SUSPENDED_DATE_LDN": london_additional_data["suspended_date"]
-        }
+        f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{ddb_table.name}", '
+        f'"nino": {data["nino"]}'
     )
 
-    logger.info('Recorded mismatch record into DynamoDB')
+    response = ddb_table.put_item(Item=data)
+
+    logger.info(f'Recorded mismatch record into DynamoDB, Response: {response}')
 
 
 if __name__ == "__main__":
