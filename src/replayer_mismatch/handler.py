@@ -40,7 +40,7 @@ def setup_logging(logger_level):
 def get_parameters():
     parser = argparse.ArgumentParser(
         description="An AWS lambda which receives payload information of replayed mismatch records, "
-        "and fetches additional information from both databases before recording in DynamoDb."
+                    "and fetches additional information from both databases before recording in DynamoDb."
     )
 
     # Parse command line inputs and set defaults
@@ -96,11 +96,16 @@ def get_parameter_store_value(parameter_name, region):
 
 
 def dynamo_db_format(
-        nino: str, transaction_id: str, take_home_pay: str, ireland_additional_data: dict, london_additional_data: dict
+        nino: str, take_home_pay: str, ireland_additional_data: dict, london_additional_data: dict
 ):
+    if ireland_additional_data.get("statement_id", None) is not None:
+        statement_id = ireland_additional_data["statement_id"]
+    else:
+        statement_id = london_additional_data["statement_id"]
+
     return {
         'nino': nino,
-        'transaction_id': transaction_id,
+        'statement_id': statement_id,
         'decrypted_take_home_pay': take_home_pay,
 
         "contract_id_ire": ireland_additional_data["contractId"],
@@ -130,7 +135,7 @@ def handler(event, context):
     global logger
     logger = setup_logging(args.log_level)
 
-    logger.info(f"Event: {event}")
+    logger.info(f'Event", "event": "{event}')
 
     nino = json.loads(event["nino"])
     transaction_id = json.loads(event["transaction_id"])
@@ -147,7 +152,7 @@ def handler(event, context):
         args.ireland_database_name,
         args.use_ssl
     )
-    # TODO: Figure out how to handle if multiple records are returned
+
     ireland_additional_data = get_additional_record_data(
         nino,
         ireland_connection
@@ -161,15 +166,23 @@ def handler(event, context):
         args.london_database_name,
         args.use_ssl
     )
-    # TODO: Figure out how to handle if multiple records are returned
+
     london_additional_data = get_additional_record_data(
         nino,
         london_connection
     )
 
+    # TODO: may be worth adding some sort of check to see if both LDN and IRE have the same # of records
+    for ireland_row in ireland_additional_data:
+        for london_row in london_additional_data:
+
+            if ireland_row["nino"] == london_row["nino"] and \
+                    ireland_row["statement_id"] == london_row["statement_id"]:
+                pass  # TODO: Refactor to build dynamoDB data for each row returned & put into dynamo
+
     try:
         dynamodb_data = dynamo_db_format(
-            nino, transaction_id, take_home_pay, ireland_additional_data, london_additional_data
+            nino, take_home_pay, ireland_additional_data, london_additional_data
         )
 
         ddb = boto3.client("dynamodb")

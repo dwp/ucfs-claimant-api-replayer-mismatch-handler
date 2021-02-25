@@ -36,11 +36,11 @@ def get_additional_record_data(nino, connection):
       statement.data->'$.assessmentPeriod.startDate' AS apStartDate,
       statement.data->'$.assessmentPeriod.endDate' AS apEndDate,
       statement.data->>'$.createdDateTime.$date' statementCreatedDate,
-      statement.data->>'$.encryptedTakeHomePay' AS encryptedTakeHomePay
+      statement.data->'$._id.statementId' AS statementId
     FROM claimant
     LEFT JOIN contract ON claimant.citizen_id = contract.citizen_a
     LEFT JOIN statement ON statement.contract_id = contract.contract_id
-    WHERE contract.data->>'$.closedDate' = 'null' AND nino = {nino}"
+    WHERE contract.data->>'$.closedDate' = 'null' AND nino = "{nino}"
     UNION SELECT
       claimant.nino,
       contract.contract_id,
@@ -48,7 +48,7 @@ def get_additional_record_data(nino, connection):
       statement.data->'$.assessmentPeriod.startDate' AS apStartDate,
       statement.data->'$.assessmentPeriod.endDate' AS apEndDate,
       statement.data->>'$.createdDateTime.$date' statementCreatedDate,
-      statement.data->>'$.encryptedTakeHomePay' AS encryptedTakeHomePay
+      statement.data->'$._id.statementId' AS statementId
     FROM claimant
     LEFT JOIN contract ON claimant.citizen_id = contract.citizen_b
     LEFT JOIN statement ON statement.contract_id = contract.contract_id
