@@ -9,6 +9,7 @@ from replayer_mismatch.handler import (
     get_parameter_store_value,
     dynamodb_format,
     dynamodb_record_mismatch_record,
+    get_matches
 )
 
 replayer_mismatch.handler.logger = MagicMock()
@@ -141,3 +142,29 @@ class TestHandler(unittest.TestCase):
 
         except Exception as e:
             self.fail(e)
+
+    def test_get_matches(self):
+        expected_matches = [
+            {'ire': {'nino': '123', 'statement_id': '123'}, 'ldn': {'nino': '123', 'statement_id': '123'}},
+            {'ire': {'nino': '321', 'statement_id': '321'}, 'ldn': {'nino': '321', 'statement_id': '321'}},
+        ]
+        expected_non_matches = [
+            {'ire': {'nino': '1234', 'statement_id': '1234'}, 'ldn': {}},
+            {'ire': {}, 'ldn': {'nino': '4321', 'statement_id': '4321'}},
+        ]
+
+        actual_matches, actual_non_matches = get_matches(
+            [
+                {'nino': '123', 'statement_id': '123'},
+                {'nino': '321', 'statement_id': '321'},
+                {'nino': '1234', 'statement_id': '1234'},
+            ],
+            [
+                {'nino': '123', 'statement_id': '123'},
+                {'nino': '321', 'statement_id': '321'},
+                {'nino': '4321', 'statement_id': '4321'},
+            ],
+        )
+
+        assert actual_matches == expected_matches, f'Expected: "{expected_matches}", Got: "{actual_matches}"'
+        assert actual_non_matches == expected_non_matches, f'Expected: "{expected_non_matches}", Got: "{actual_non_matches}"'
