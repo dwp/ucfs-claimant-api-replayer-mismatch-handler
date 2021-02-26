@@ -97,7 +97,7 @@ def get_parameter_store_value(parameter_name, region):
         raise e
 
 
-def dynamo_db_format(
+def dynamodb_format(
     nino: str,
     take_home_pay: str,
     ireland_additional_data: dict,
@@ -127,7 +127,7 @@ def dynamo_db_format(
 
 def dynamodb_record_mismatch_record(ddb_table, data):
     logger.info(
-        f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{ddb_table.name}", '
+        f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{ddb_table}", '
         f'"nino": {data["nino"]}'
     )
 
@@ -199,7 +199,7 @@ def handler(event, context):
             if ireland_row["nino"] == london_row["nino"] and \
                     ireland_row["statement_id"] == london_row["statement_id"]:
                 try:
-                    dynamodb_data = dynamo_db_format(
+                    dynamodb_data = dynamodb_format(
                         nino, take_home_pay, ireland_row, london_row
                     )
 

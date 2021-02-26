@@ -1,10 +1,13 @@
-import os
 import unittest
+from unittest.mock import MagicMock
 
 import boto3
 from moto import mock_ssm, mock_dynamodb2
 
+import replayer_mismatch.handler
 from replayer_mismatch.handler import get_parameter_store_value, dynamodb_format, dynamodb_record_mismatch_record
+
+replayer_mismatch.handler.logger = MagicMock()
 
 """Tests for the UCFS claimant API replayer mismatch handler lambda."""
 
@@ -103,12 +106,11 @@ class TestHandler(unittest.TestCase):
             }
         )
 
-        assert actual == expected, f'Expected: "{expected}", Got: {actual}'
+        assert actual == dynamo_data, f'Expected: "{expected}", Got: {actual}'
 
     @mock_dynamodb2
     def test_dynamodb_record_mismatch_record(self):
-        ddb = boto3.client("dynamodb", region_name="eu-west-1")
-        ddb.create_table(
+        boto3.client("dynamodb", region_name="eu-west-1").create_table(
             TableName='test_table',
             KeySchema=[
                 {
@@ -122,18 +124,35 @@ class TestHandler(unittest.TestCase):
             ],
             AttributeDefinitions=[
                 {
-                    'AttributeName': key,
+                    'AttributeName': 'nino',
                     'AttributeType': 'S'
-                } for key in dynamo_attr_keys
+                },
+                {
+                    'AttributeName': 'statement_id',
+                    'AttributeType': 'S'
+                },
             ],
             ProvisionedThroughput={
                 'ReadCapacityUnits': 10,
                 'WriteCapacityUnits': 10
             }
         )
-        table = ddb.Table("test_table")
 
         try:
+            table = boto3.resource("dynamodb", region_name="eu-west-1").Table("test_table")
             dynamodb_record_mismatch_record(table, dynamo_data)
+
+            item = table.get_item(
+                Key={
+                    "nino": "123",
+                    "statement_id": "123_ire",
+                }
+            )["Item"]
+
+            assert item["ap_start_date_ire"] == "123_ire", f'Expected : "123_ire", Got: {item["ap_start_date_ire"]}'
+            assert item["ap_end_date_ire"] == "123_ire", f'Expected : "123_ire", Got: {item["ap_end_date_ire"]}'
+            assert item["ap_start_date_ldn"] == "123_ldn", f'Expected : "123_ldn", Got: {item["ap_start_date_ldn"]}'
+            assert item["ap_end_date_ldn"] == "123_ldn", f'Expected : "123_ldn", Got: {item["ap_end_date_ldn"]}'
+
         except Exception as e:
             self.fail(e)
