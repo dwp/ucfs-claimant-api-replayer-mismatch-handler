@@ -172,31 +172,36 @@ def handler(event, context):
         london_connection
     )
 
-    # TODO: may be worth adding some sort of check to see if both LDN and IRE have the same # of records
+    ire_len = len(ireland_additional_data)
+    ldn_len = len(london_additional_data)
+
+    if ire_len != ldn_len:
+        logger.warning('Mismatch of length between ireland & london additional data", '
+                       f'"ireland_length": "{ire_len}", "london_length": "{ldn_len}" '
+                       f'"ireland_additional_data": "{ireland_additional_data}" '
+                       f'"london_additional_data": "{london_additional_data} ')
+
+    table = boto3.client("dynamodb").Table(args.ddb_record_mismatch_table)
+
     for ireland_row in ireland_additional_data:
         for london_row in london_additional_data:
 
             if ireland_row["nino"] == london_row["nino"] and \
                     ireland_row["statement_id"] == london_row["statement_id"]:
-                pass  # TODO: Refactor to build dynamoDB data for each row returned & put into dynamo
+                try:
+                    dynamodb_data = dynamo_db_format(
+                        nino, take_home_pay, ireland_row, london_row
+                    )
 
-    try:
-        dynamodb_data = dynamo_db_format(
-            nino, take_home_pay, ireland_additional_data, london_additional_data
-        )
+                    dynamodb_record_mismatch_record(table, dynamodb_data)
+                except KeyError as e:
+                    logger.error('Error attempting to build dynamoDB data", '
+                                 f'"ireland_row": "{ireland_row}", "london_row": "{london_row}", '
+                                 f'"missing_key": "{e.args[0]}", "exception": "{e}')
 
-        ddb = boto3.client("dynamodb")
-        table = ddb.Table(args.ddb_record_mismatch_table)
-
-        dynamodb_record_mismatch_record(table, dynamodb_data)
-    except KeyError as e:
-        logger.error('Error attempting to build dynamoDB data", '
-                     f'"ireland_additional_data": "{ireland_additional_data}", "missing_key": "{e.args[0]}",'
-                     f'"london_additional_data": "{london_additional_data}", "exception": "{e}')
-
-    except Exception as e:
-        logger.error('Error attempting to put dynamoDB record", '
-                     f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}')
+                except Exception as e:
+                    logger.error('Error attempting to put dynamoDB record", '
+                                 f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}')
 
 
 def dynamodb_record_mismatch_record(ddb_table, data):
