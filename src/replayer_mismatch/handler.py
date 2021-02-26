@@ -42,7 +42,7 @@ def setup_logging(logger_level):
 def get_parameters():
     parser = argparse.ArgumentParser(
         description="An AWS lambda which receives payload information of replayed mismatch records, "
-                    "and fetches additional information from both databases before recording in DynamoDb."
+        "and fetches additional information from both databases before recording in DynamoDb."
     )
 
     # Parse command line inputs and set defaults
@@ -98,10 +98,10 @@ def get_parameter_store_value(parameter_name, region):
 
 
 def dynamodb_format(
-        nino: str,
-        take_home_pay: str,
-        ireland_additional_data: dict,
-        london_additional_data: dict,
+    nino: str,
+    take_home_pay: str,
+    ireland_additional_data: dict,
+    london_additional_data: dict,
 ):
     if ireland_additional_data.get("statementId", None) is not None:
         statement_id = ireland_additional_data["statementId"]
@@ -145,17 +145,20 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
 
     for ire_row in ire_data:
         for ldn_row in ldn_data:
-            if ire_row["nino"] == ldn_row["nino"] and ire_row["statement_id"] == ldn_row["statement_id"]:
-                matches.append({'ire': ire_row, 'ldn': ldn_row})
+            if (
+                ire_row["nino"] == ldn_row["nino"]
+                and ire_row["statement_id"] == ldn_row["statement_id"]
+            ):
+                matches.append({"ire": ire_row, "ldn": ldn_row})
 
                 ire_copy.remove(ire_row)
                 ldn_copy.remove(ldn_row)
 
     for row in ire_copy:
-        non_matches.append({'ire': row, 'ldn': {}})
+        non_matches.append({"ire": row, "ldn": {}})
 
     for row in ldn_copy:
-        non_matches.append({'ire': {}, 'ldn': row})
+        non_matches.append({"ire": {}, "ldn": row})
 
     return matches, non_matches
 
@@ -245,9 +248,7 @@ def handler(event, context):
 
     for row in non_matches:
         try:
-            dynamodb_data = dynamodb_format(
-                nino, take_home_pay, row["ire"], row["ldn"]
-            )
+            dynamodb_data = dynamodb_format(nino, take_home_pay, row["ire"], row["ldn"])
 
             dynamodb_record_mismatch_record(table, dynamodb_data)
         except KeyError as e:
