@@ -40,7 +40,7 @@ def setup_logging(logger_level):
 def get_parameters():
     parser = argparse.ArgumentParser(
         description="An AWS lambda which receives payload information of replayed mismatch records, "
-                    "and fetches additional information from both databases before recording in DynamoDb."
+        "and fetches additional information from both databases before recording in DynamoDb."
     )
 
     # Parse command line inputs and set defaults
@@ -85,18 +85,21 @@ def get_parameter_store_value(parameter_name, region):
     ssm = boto3.client("ssm", region_name=region)
 
     try:
-        parameter = ssm.get_parameter(
-            Name=parameter_name, WithDecryption=False
-        )
+        parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=False)
         return parameter
     except Exception as e:
-        logger.error(f'Error attempting to retrieve parameter", "parameter_name": "{parameter_name}", '
-                     f'"request_region": "{region}", "exception": "{e}')
+        logger.error(
+            f'Error attempting to retrieve parameter", "parameter_name": "{parameter_name}", '
+            f'"request_region": "{region}", "exception": "{e}'
+        )
         raise e
 
 
 def dynamo_db_format(
-        nino: str, take_home_pay: str, ireland_additional_data: dict, london_additional_data: dict
+    nino: str,
+    take_home_pay: str,
+    ireland_additional_data: dict,
+    london_additional_data: dict,
 ):
     if ireland_additional_data.get("statement_id", None) is not None:
         statement_id = ireland_additional_data["statement_id"]
@@ -104,24 +107,19 @@ def dynamo_db_format(
         statement_id = london_additional_data["statement_id"]
 
     return {
-        'nino': nino,
-        'statement_id': statement_id,
-        'decrypted_take_home_pay': take_home_pay,
-
+        "nino": nino,
+        "statement_id": statement_id,
+        "decrypted_take_home_pay": take_home_pay,
         "contract_id_ire": ireland_additional_data["contractId"],
         "contract_id_ldn": london_additional_data["contractId"],
-
         "ap_start_date_ire": ireland_additional_data["apStartDate"],
         "ap_end_date_ire": ireland_additional_data["apEndDate"],
-
         "ap_start_date_ldn": london_additional_data["apStartDate"],
         "ap_end_date_ldn": london_additional_data["apEndDate"],
-
         "suspension_date_ire": ireland_additional_data["suspensionDate"],
         "suspension_date_ldn": london_additional_data["suspensionDate"],
-
         "statement_created_date_ire": ireland_additional_data["statementCreatedDate"],
-        "statement_created_date_ldn": london_additional_data["statementCreatedDate"]
+        "statement_created_date_ldn": london_additional_data["statementCreatedDate"],
     }
 
 
@@ -142,42 +140,43 @@ def handler(event, context):
     take_home_pay = json.loads(event["take_home_pay"])
 
     logger.info(
-        f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}')
+        f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
+    )
 
-    ireland_sql_password = get_parameter_store_value(args.ireland_master_pw_parameter, "eu-west-1")
+    ireland_sql_password = get_parameter_store_value(
+        args.ireland_master_pw_parameter, "eu-west-1"
+    )
     ireland_connection = get_connection(
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
         args.ireland_database_name,
-        args.use_ssl
+        args.use_ssl,
     )
 
-    ireland_additional_data = get_additional_record_data(
-        nino,
-        ireland_connection
-    )
+    ireland_additional_data = get_additional_record_data(nino, ireland_connection)
 
-    london_sql_password = get_parameter_store_value(args.ireland_master_pw_parameter, "eu-west-2")
+    london_sql_password = get_parameter_store_value(
+        args.ireland_master_pw_parameter, "eu-west-2"
+    )
     london_connection = get_connection(
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
         args.london_database_name,
-        args.use_ssl
+        args.use_ssl,
     )
 
-    london_additional_data = get_additional_record_data(
-        nino,
-        london_connection
-    )
+    london_additional_data = get_additional_record_data(nino, london_connection)
 
     # TODO: may be worth adding some sort of check to see if both LDN and IRE have the same # of records
     for ireland_row in ireland_additional_data:
         for london_row in london_additional_data:
 
-            if ireland_row["nino"] == london_row["nino"] and \
-                    ireland_row["statement_id"] == london_row["statement_id"]:
+            if (
+                ireland_row["nino"] == london_row["nino"]
+                and ireland_row["statement_id"] == london_row["statement_id"]
+            ):
                 pass  # TODO: Refactor to build dynamoDB data for each row returned & put into dynamo
 
     try:
@@ -190,13 +189,17 @@ def handler(event, context):
 
         dynamodb_record_mismatch_record(table, dynamodb_data)
     except KeyError as e:
-        logger.error('Error attempting to build dynamoDB data", '
-                     f'"ireland_additional_data": "{ireland_additional_data}", "missing_key": "{e.args[0]}",'
-                     f'"london_additional_data": "{london_additional_data}", "exception": "{e}')
+        logger.error(
+            'Error attempting to build dynamoDB data", '
+            f'"ireland_additional_data": "{ireland_additional_data}", "missing_key": "{e.args[0]}",'
+            f'"london_additional_data": "{london_additional_data}", "exception": "{e}'
+        )
 
     except Exception as e:
-        logger.error('Error attempting to put dynamoDB record", '
-                     f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}')
+        logger.error(
+            'Error attempting to put dynamoDB record", '
+            f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
+        )
 
 
 def dynamodb_record_mismatch_record(ddb_table, data):
@@ -207,7 +210,7 @@ def dynamodb_record_mismatch_record(ddb_table, data):
 
     response = ddb_table.put_item(Item=data)
 
-    logger.info(f'Recorded mismatch record into DynamoDB, Response: {response}')
+    logger.info(f"Recorded mismatch record into DynamoDB, Response: {response}")
 
 
 if __name__ == "__main__":

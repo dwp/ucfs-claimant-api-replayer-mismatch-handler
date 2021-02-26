@@ -4,7 +4,9 @@ import os
 logger = None
 
 
-def get_connection(rds_endpoint: str, username: str, password: str, database_name: str, use_ssl: str):
+def get_connection(
+    rds_endpoint: str, username: str, password: str, database_name: str, use_ssl: str
+):
     global logger
 
     script_dir = os.path.dirname(__file__)
@@ -13,6 +15,7 @@ def get_connection(rds_endpoint: str, username: str, password: str, database_nam
 
     if logger is None:
         from handler import logger as __logger
+
         logger = __logger
 
     logger.info(f"Path to the CR cert is '{abs_file_path}'")
@@ -23,7 +26,7 @@ def get_connection(rds_endpoint: str, username: str, password: str, database_nam
         password=password,
         database=database_name,
         ssl_ca=abs_file_path,
-        ssl_verify_cert=True if use_ssl.lower() == "true" else False
+        ssl_verify_cert=True if use_ssl.lower() == "true" else False,
     )
 
 
