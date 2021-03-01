@@ -6,3 +6,4 @@ build/
 *.egg-info
 venv/
 artifacts/
+.DS_Store
