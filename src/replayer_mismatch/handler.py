@@ -50,6 +50,17 @@ def get_parameters():
     parser.add_argument("--environment", default="NOT_SET")
     parser.add_argument("--application", default="NOT_SET")
     parser.add_argument("--log-level", default="INFO")
+    parser.add_argument("--use-ssl", default="true")
+
+    parser.add_argument("--ireland-rds-hostname")
+    parser.add_argument("--ireland-rds-username")
+    parser.add_argument("--ireland-database-name")
+
+    parser.add_argument("--london-rds-hostname")
+    parser.add_argument("--london-rds-username")
+    parser.add_argument("--london-database-name")
+
+    parser.add_argument("--ddb-record-mismatch-table")
 
     _args = parser.parse_args()
 
@@ -65,6 +76,36 @@ def get_parameters():
 
     if "LOG_LEVEL" in os.environ:
         _args.log_level = os.environ["LOG_LEVEL"]
+
+    if "USE_SSL" in os.environ:
+        _args.use_ssl = os.environ["USE_SSL"]
+
+    if "IRELAND_RDS_HOSTNAME" in os.environ:
+        _args.ireland_rds_hostname = os.environ["IRELAND_RDS_HOSTNAME"]
+
+    if "IRELAND_RDS_USERNAME" in os.environ:
+        _args.ireland_rds_username = os.environ["IRELAND_RDS_USERNAME"]
+
+    if "IRELAND_RDS_PARAMETER" in os.environ:
+        _args.ireland_rds_parameter = os.environ["IRELAND_RDS_PARAMETER"]
+
+    if "IRELAND_DATABASE_NAME" in os.environ:
+        _args.ireland_database_name = os.environ["IRELAND_DATABASE_NAME"]
+
+    if "LONDON_RDS_HOSTNAME" in os.environ:
+        _args.london_rds_hostname = os.environ["LONDON_RDS_HOSTNAME"]
+
+    if "LONDON_RDS_USERNAME" in os.environ:
+        _args.london_rds_username = os.environ["LONDON_RDS_USERNAME"]
+
+    if "LONDON_RDS_PARAMETER" in os.environ:
+        _args.london_rds_parameter = os.environ["LONDON_RDS_PARAMETER"]
+
+    if "LONDON_DATABASE_NAME" in os.environ:
+        _args.london_database_name = os.environ["LONDON_DATABASE_NAME"]
+
+    if "DDB_RECORD_MISMATCH_TABLE" in os.environ:
+        _args.ddb_record_mismatch_table = os.environ["DDB_RECORD_MISMATCH_TABLE"]
 
     required_args = ["log_level"]
 
@@ -184,7 +225,7 @@ def handler(event, context):
     )
 
     ireland_sql_password = get_parameter_store_value(
-        args.ireland_master_pw_parameter, "eu-west-1"
+        args.ireland_rds_parameter, "eu-west-1"
     )
     ireland_connection = get_connection(
         args.ireland_rds_hostname,
@@ -197,7 +238,7 @@ def handler(event, context):
     ireland_additional_data = get_additional_record_data(nino, ireland_connection)
 
     london_sql_password = get_parameter_store_value(
-        args.ireland_master_pw_parameter, "eu-west-2"
+        args.london_rds_parameter, "eu-west-2"
     )
     london_connection = get_connection(
         args.london_rds_hostname,
