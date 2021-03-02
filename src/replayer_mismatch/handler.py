@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from .query_rds import get_connection, get_additional_record_data
+from query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
