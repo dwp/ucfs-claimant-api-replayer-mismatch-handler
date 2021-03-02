@@ -14,7 +14,7 @@ def get_connection(
     abs_file_path = os.path.join(script_dir, rel_path)
 
     if logger is None:
-        from handler import logger as __logger
+        from .handler import logger as __logger
 
         logger = __logger
 
