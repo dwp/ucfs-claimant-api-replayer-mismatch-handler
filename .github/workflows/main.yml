@@ -32,13 +32,13 @@ jobs:
         uses: actions/checkout@master
       - name: Generate artifacts directory
         run: mkdir artifacts
+        run: mkdir artifacts/replayer_mismatch
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
       - name: Install dependencies
         run: |
-          mkdir artifacts/replayer_mismatch
           pip install -r requirements.txt -t artifacts
           cp src/replayer_mismatch/*.py artifacts/replayer_mismatch
       - name: Produce zip
