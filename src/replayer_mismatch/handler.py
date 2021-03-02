@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from .query_rds import get_connection, get_additional_record_data
+from . import query_rds
 
 
 def setup_logging(logger_level):
@@ -227,7 +227,7 @@ def handler(event, context):
     ireland_sql_password = get_parameter_store_value(
         args.ireland_rds_parameter, "eu-west-1"
     )
-    ireland_connection = get_connection(
+    ireland_connection = query_rds.get_connection(
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
@@ -235,12 +235,14 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    ireland_additional_data = get_additional_record_data(nino, ireland_connection)
+    ireland_additional_data = query_rds.get_additional_record_data(
+        nino, ireland_connection
+    )
 
     london_sql_password = get_parameter_store_value(
         args.london_rds_parameter, "eu-west-2"
     )
-    london_connection = get_connection(
+    london_connection = query_rds.get_connection(
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
@@ -248,7 +250,9 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    london_additional_data = get_additional_record_data(nino, london_connection)
+    london_additional_data = query_rds.get_additional_record_data(
+        nino, london_connection
+    )
 
     ire_len = len(ireland_additional_data)
     ldn_len = len(london_additional_data)
