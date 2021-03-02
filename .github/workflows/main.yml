@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt -t artifacts
-          cp src/replayer_mismatch/*.py artifacts/
+          cp src/replayer_mismatch/*.py artifacts/replayer_mismatch
       - name: Produce zip
         working-directory: ./artifacts
         run: zip -qq -r ../ucfs-claimant-api-replayer-mismatch-handler-${{ needs.get-publish-version.outputs.publish-version }}.zip *
