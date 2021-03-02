@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from . import query_rds
+from .query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -42,7 +42,7 @@ def setup_logging(logger_level):
 def get_parameters():
     parser = argparse.ArgumentParser(
         description="An AWS lambda which receives payload information of replayed mismatch records, "
-        "and fetches additional information from both databases before recording in DynamoDb."
+                    "and fetches additional information from both databases before recording in DynamoDb."
     )
 
     # Parse command line inputs and set defaults
@@ -139,10 +139,10 @@ def get_parameter_store_value(parameter_name, region):
 
 
 def dynamodb_format(
-    nino: str,
-    take_home_pay: str,
-    ireland_additional_data: dict,
-    london_additional_data: dict,
+        nino: str,
+        take_home_pay: str,
+        ireland_additional_data: dict,
+        london_additional_data: dict,
 ):
     if ireland_additional_data.get("statementId", None) is not None:
         statement_id = ireland_additional_data["statementId"]
@@ -187,8 +187,8 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
     for ire_row in ire_data:
         for ldn_row in ldn_data:
             if (
-                ire_row["nino"] == ldn_row["nino"]
-                and ire_row["statement_id"] == ldn_row["statement_id"]
+                    ire_row["nino"] == ldn_row["nino"]
+                    and ire_row["statement_id"] == ldn_row["statement_id"]
             ):
                 matches.append({"ire": ire_row, "ldn": ldn_row})
 
@@ -216,9 +216,9 @@ def handler(event, context):
 
     logger.info(f'Event", "event": "{event}')
 
-    nino = json.loads(event["nino"])
-    transaction_id = json.loads(event["transaction_id"])
-    take_home_pay = json.loads(event["take_home_pay"])
+    nino = event["nino"]
+    transaction_id = event["transaction_id"]
+    take_home_pay = event["take_home_pay"]
 
     logger.info(
         f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
@@ -310,3 +310,16 @@ def handler(event, context):
                 f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
             )
             continue
+
+
+if __name__ == "__main__":
+    try:
+        args = get_parameters()
+        logger = setup_logging("INFO")
+
+        boto3.setup_default_session(region_name=args.aws_region)
+        logger.info(os.getcwd())
+        json_content = json.loads(open("resources/event.json", "r").read())
+        handler(json_content, None)
+    except Exception as err:
+        logger.error(f'Exception occurred for invocation", "error_message": "{err}')
