@@ -221,7 +221,8 @@ def handler(event, context):
     take_home_pay = event["take_home_pay"]
 
     logger.info(
-        f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
+        f'Requesting additional data for unmatched record", "nino": "{nino}", '
+        f'"transaction_id": "{transaction_id}", "take_home_pay": "{take_home_pay}'
     )
 
     ireland_sql_password = get_parameter_store_value(
