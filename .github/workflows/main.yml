@@ -38,6 +38,7 @@ jobs:
           python-version: 3.8
       - name: Install dependencies
         run: |
+          mkdir artifacts/replayer_mismatch
           pip install -r requirements.txt -t artifacts
           cp src/replayer_mismatch/*.py artifacts/replayer_mismatch
       - name: Produce zip
