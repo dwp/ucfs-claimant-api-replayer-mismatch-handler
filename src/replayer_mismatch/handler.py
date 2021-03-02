@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from . import query_rds
+from .query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -216,18 +216,19 @@ def handler(event, context):
 
     logger.info(f'Event", "event": "{event}')
 
-    nino = json.loads(event["nino"])
-    transaction_id = json.loads(event["transaction_id"])
-    take_home_pay = json.loads(event["take_home_pay"])
+    nino = event["nino"]
+    transaction_id = event["transaction_id"]
+    take_home_pay = event["take_home_pay"]
 
     logger.info(
-        f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
+        f'Requesting additional data for unmatched record", "nino": "{nino}", '
+        f'"transaction_id": "{transaction_id}", "take_home_pay": "{take_home_pay}'
     )
 
     ireland_sql_password = get_parameter_store_value(
         args.ireland_rds_parameter, "eu-west-1"
     )
-    ireland_connection = query_rds.get_connection(
+    ireland_connection = get_connection(
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
@@ -235,14 +236,12 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    ireland_additional_data = query_rds.get_additional_record_data(
-        nino, ireland_connection
-    )
+    ireland_additional_data = get_additional_record_data(nino, ireland_connection)
 
     london_sql_password = get_parameter_store_value(
         args.london_rds_parameter, "eu-west-2"
     )
-    london_connection = query_rds.get_connection(
+    london_connection = get_connection(
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
@@ -250,9 +249,7 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    london_additional_data = query_rds.get_additional_record_data(
-        nino, london_connection
-    )
+    london_additional_data = get_additional_record_data(nino, london_connection)
 
     ire_len = len(ireland_additional_data)
     ldn_len = len(london_additional_data)
@@ -310,3 +307,16 @@ def handler(event, context):
                 f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
             )
             continue
+
+
+if __name__ == "__main__":
+    try:
+        args = get_parameters()
+        logger = setup_logging("INFO")
+
+        boto3.setup_default_session(region_name=args.aws_region)
+        logger.info(os.getcwd())
+        json_content = json.loads(open("resources/event.json", "r").read())
+        handler(json_content, None)
+    except Exception as err:
+        logger.error(f'Exception occurred for invocation", "error_message": "{err}')
