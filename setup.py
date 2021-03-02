@@ -10,7 +10,7 @@ setuptools.setup(
     description="Lambda for recording additional data for mismatch records into DynamoDb",
     long_description="Lambda for recording additional data for mismatch records into DynamoDb",
     long_description_content_type="text/markdown",
-    entry_points={"console_scripts": ["replayer_mismatch=handler:main"]},
+    entry_points={"console_scripts": ["handler=handler:main"]},
     package_dir={"": "src"},
     packages=setuptools.find_packages("src"),
     classifiers=[
