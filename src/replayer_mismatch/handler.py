@@ -216,9 +216,10 @@ def handler(event, context):
 
     logger.info(f'Event", "event": "{event}')
 
-    nino = json.loads(event["nino"])
-    transaction_id = json.loads(event["transaction_id"])
-    take_home_pay = json.loads(event["take_home_pay"])
+    event = json.loads(event)
+    nino = event["nino"]
+    transaction_id = event["transaction_id"]
+    take_home_pay = event["take_home_pay"]
 
     logger.info(
         f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
