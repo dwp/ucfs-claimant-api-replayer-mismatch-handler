@@ -227,7 +227,7 @@ def handler(event, context):
     ireland_sql_password = get_parameter_store_value(
         args.ireland_rds_parameter, "eu-west-1"
     )
-    ireland_connection = query_rds.get_connection(
+    ireland_connection = get_connection(
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
@@ -235,14 +235,14 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    ireland_additional_data = query_rds.get_additional_record_data(
+    ireland_additional_data = get_additional_record_data(
         nino, ireland_connection
     )
 
     london_sql_password = get_parameter_store_value(
         args.london_rds_parameter, "eu-west-2"
     )
-    london_connection = query_rds.get_connection(
+    london_connection = get_connection(
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
@@ -250,7 +250,7 @@ def handler(event, context):
         args.use_ssl,
     )
 
-    london_additional_data = query_rds.get_additional_record_data(
+    london_additional_data = get_additional_record_data(
         nino, london_connection
     )
 
