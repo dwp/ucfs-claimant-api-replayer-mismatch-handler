@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from replayer_mismatch.query_rds import get_connection, get_additional_record_data
+from query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -216,7 +216,6 @@ def handler(event, context):
 
     logger.info(f'Event", "event": "{event}')
 
-    event = json.loads(event)
     nino = event["nino"]
     transaction_id = event["transaction_id"]
     take_home_pay = event["take_home_pay"]
@@ -307,3 +306,16 @@ def handler(event, context):
                 f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
             )
             continue
+
+if __name__ == "__main__":
+    try:
+        args = get_parameters()
+        logger = setup_logging("INFO")
+
+        boto3.setup_default_session(region_name=args.aws_region
+        )
+        logger.info(os.getcwd())
+        json_content = json.loads(open("resources/event.json", "r").read())
+        handler(json_content, None)
+    except Exception as err:
+        logger.error(f'Exception occurred for invocation", "error_message": "{err}')
