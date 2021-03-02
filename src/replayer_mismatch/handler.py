@@ -311,13 +311,13 @@ def handler(event, context):
             )
             continue
 
+
 if __name__ == "__main__":
     try:
         args = get_parameters()
         logger = setup_logging("INFO")
 
-        boto3.setup_default_session(region_name=args.aws_region
-        )
+        boto3.setup_default_session(region_name=args.aws_region)
         logger.info(os.getcwd())
         json_content = json.loads(open("resources/event.json", "r").read())
         handler(json_content, None)
