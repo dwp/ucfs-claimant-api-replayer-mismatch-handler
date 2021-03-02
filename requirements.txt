@@ -11,4 +11,4 @@ requests==2.25.1
 s3transfer==0.3.4
 six==1.15.0
 urllib3==1.26.2
-python-mysql-connector==8.0.23
+mysql-connector-python==8.0.23
