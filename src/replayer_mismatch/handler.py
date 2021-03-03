@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from . import query_rds
+from replayer_mismatch.query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -107,6 +107,12 @@ def get_parameters():
     if "DDB_RECORD_MISMATCH_TABLE" in os.environ:
         _args.ddb_record_mismatch_table = os.environ["DDB_RECORD_MISMATCH_TABLE"]
 
+    if "IRELAND_PARAMETER_REGION" in os.environ:
+        _args.ireland_parameter_region = os.environ["IRELAND_PARAMETER_REGION"].lower()
+
+    if "LONDON_PARAMETER_REGION" in os.environ:
+        _args.london_parameter_region = os.environ["LONDON_PARAMETER_REGION"].lower()
+
     required_args = ["log_level"]
 
     missing_args = []
@@ -128,7 +134,10 @@ def get_parameter_store_value(parameter_name, region):
     ssm = boto3.client("ssm", region_name=region)
 
     try:
-        parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=False)
+        logger.info(
+            f'Attempting to fetch parameter", "parameter_name": "{parameter_name}'
+        )
+        parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
         return parameter["Parameter"]["Value"]
     except Exception as e:
         logger.error(
@@ -216,43 +225,42 @@ def handler(event, context):
 
     logger.info(f'Event", "event": "{event}')
 
-    nino = json.loads(event["nino"])
-    transaction_id = json.loads(event["transaction_id"])
-    take_home_pay = json.loads(event["take_home_pay"])
+    nino = event["nino"]
+    transaction_id = event["transaction_id"]
+    take_home_pay = event["take_home_pay"]
 
     logger.info(
-        f'Requesting additional data for unmatched record", "nino": "{nino}", "transaction_id": "{transaction_id}'
+        f'Requesting additional data for unmatched record", "nino": "{nino}", '
+        f'"transaction_id": "{transaction_id}", "take_home_pay": "{take_home_pay}'
     )
 
     ireland_sql_password = get_parameter_store_value(
-        args.ireland_rds_parameter, "eu-west-1"
+        args.ireland_rds_parameter, args.ireland_parameter_region
     )
-    ireland_connection = query_rds.get_connection(
+    ireland_connection = get_connection(
         args.ireland_rds_hostname,
         args.ireland_rds_username,
         ireland_sql_password,
         args.ireland_database_name,
         args.use_ssl,
+        logger,
     )
 
-    ireland_additional_data = query_rds.get_additional_record_data(
-        nino, ireland_connection
-    )
+    ireland_additional_data = get_additional_record_data(nino, ireland_connection)
 
     london_sql_password = get_parameter_store_value(
-        args.london_rds_parameter, "eu-west-2"
+        args.london_rds_parameter, args.london_parameter_region
     )
-    london_connection = query_rds.get_connection(
+    london_connection = get_connection(
         args.london_rds_hostname,
         args.london_rds_username,
         london_sql_password,
         args.london_database_name,
         args.use_ssl,
+        logger,
     )
 
-    london_additional_data = query_rds.get_additional_record_data(
-        nino, london_connection
-    )
+    london_additional_data = get_additional_record_data(nino, london_connection)
 
     ire_len = len(ireland_additional_data)
     ldn_len = len(london_additional_data)
@@ -265,7 +273,7 @@ def handler(event, context):
             f'"london_additional_data": "{london_additional_data} '
         )
 
-    table = boto3.client("dynamodb").Table(args.ddb_record_mismatch_table)
+    dynamo_table = boto3.resource("dynamodb").Table(args.ddb_record_mismatch_table)
 
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 
@@ -275,7 +283,7 @@ def handler(event, context):
                 nino, take_home_pay, match["ire"], match["ldn"]
             )
 
-            dynamodb_record_mismatch_record(table, dynamodb_data)
+            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
         except KeyError as e:
             logger.error(
                 'Error attempting to build dynamoDB data", '
@@ -287,7 +295,7 @@ def handler(event, context):
         except Exception as e:
             logger.error(
                 'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
+                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
             )
             continue
 
@@ -295,7 +303,7 @@ def handler(event, context):
         try:
             dynamodb_data = dynamodb_format(nino, take_home_pay, row["ire"], row["ldn"])
 
-            dynamodb_record_mismatch_record(table, dynamodb_data)
+            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
         except KeyError as e:
             logger.error(
                 'Error attempting to build dynamoDB data", '
@@ -307,6 +315,20 @@ def handler(event, context):
         except Exception as e:
             logger.error(
                 'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
+                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
             )
             continue
+
+
+if __name__ == "__main__":
+    try:
+        args = get_parameters()
+        logger = setup_logging("INFO")
+
+        boto3.setup_default_session(region_name=args.aws_region)
+        logger.info(os.getcwd())
+        json_content = json.loads(open("resources/event.json", "r").read())
+        handler(json_content, None)
+    except Exception as err:
+        logger.error(f'Exception occurred for invocation", "error_message": "{err}')
+        raise err
