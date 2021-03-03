@@ -307,7 +307,7 @@ def handler(event, context):
         except KeyError as e:
             logger.error(
                 'Error attempting to build dynamoDB data", '
-                f'"ireland_row": "{match["ire"]}", "london_row": "{match["ldn"]}", '
+                f'"ireland_row": "{row["ire"]}", "london_row": "{row["ldn"]}", '
                 f'"missing_key": "{e.args[0]}", "exception": "{e}'
             )
             continue
