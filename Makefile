@@ -17,3 +17,9 @@ git-hooks: ## Set up hooks in .githooks
 
 unittest:
 	tox
+
+run-local:
+	@{ \
+  		export PYTHONPATH=$(shell pwd)/src; \
+		python src/replayer_mismatch/handler.py; \
+	}

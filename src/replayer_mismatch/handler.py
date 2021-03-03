@@ -62,6 +62,9 @@ def get_parameters():
 
     parser.add_argument("--ddb-record-mismatch-table")
 
+    parser.add_argument("--ireland-parameter-region")
+    parser.add_argument("--london-parameter-region")
+
     _args = parser.parse_args()
 
     # Override arguments with environment variables where set
@@ -113,7 +116,23 @@ def get_parameters():
     if "LONDON_PARAMETER_REGION" in os.environ:
         _args.london_parameter_region = os.environ["LONDON_PARAMETER_REGION"].lower()
 
-    required_args = ["log_level"]
+    required_args = [
+        "aws_region",
+        "environment",
+        "application",
+        "log_level",
+        "ireland_rds_hostname",
+        "ireland_rds_username",
+        "ireland_rds_parameter",
+        "ireland_database_name",
+        "london_rds_hostname",
+        "london_rds_username",
+        "london_rds_parameter",
+        "london_database_name",
+        "ddb_record_mismatch_table",
+        "ireland_parameter_region",
+        "london_parameter_region",
+    ]
 
     missing_args = []
     for required_message_key in required_args:

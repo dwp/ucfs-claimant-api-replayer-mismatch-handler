@@ -1,16 +1,15 @@
 name: Master
 
-#on:
-#  push:
-#    branches:
-#      - master
-#    paths-ignore:
-#      - 'docs/**'
-#      - '*.md'
-#      - '.gitignore'
-#      - 'LICENCE'
-#      - 'resources/**'
-on: pull_request
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENCE'
+      - 'resources/**'
 jobs:
   get-publish-version:
     runs-on: ubuntu-latest
