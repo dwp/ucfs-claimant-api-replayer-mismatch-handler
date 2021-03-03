@@ -107,6 +107,12 @@ def get_parameters():
     if "DDB_RECORD_MISMATCH_TABLE" in os.environ:
         _args.ddb_record_mismatch_table = os.environ["DDB_RECORD_MISMATCH_TABLE"]
 
+    if "IRELAND_PARAMETER_REGION" in os.environ:
+        _args.ireland_parameter_region = os.environ["IRELAND_PARAMETER_REGION"]
+
+    if "LONDON_PARAMETER_REGION" in os.environ:
+        _args.london_parameter_region = os.environ["LONDON_PARAMETER_REGION"]
+
     required_args = ["log_level"]
 
     missing_args = []
@@ -227,7 +233,7 @@ def handler(event, context):
     )
 
     ireland_sql_password = get_parameter_store_value(
-        args.ireland_rds_parameter, "eu-west-1"
+        args.ireland_rds_parameter, args.ireland_parameter_region
     )
     ireland_connection = get_connection(
         args.ireland_rds_hostname,
@@ -241,7 +247,7 @@ def handler(event, context):
     ireland_additional_data = get_additional_record_data(nino, ireland_connection)
 
     london_sql_password = get_parameter_store_value(
-        args.london_rds_parameter, "eu-west-2"
+        args.london_rds_parameter, args.london_parameter_region
     )
     london_connection = get_connection(
         args.london_rds_hostname,
