@@ -80,23 +80,25 @@ class TestHandler(unittest.TestCase):
         nino = "123"
         take_home_pay = "123"
         ireland_additional_data = {
-                "statementId": "123_ire".encode(),
-                "contractId": "123_ire".encode(),
-                "apStartDate": "123_ire".encode(),
-                "apEndDate": "123_ire".encode(),
-                "suspensionDate": "123_ire".encode(),
-                "statementCreatedDate": "123_ire".encode(),
-            }
+            "statementId": "123_ire".encode(),
+            "contractId": "123_ire".encode(),
+            "apStartDate": "123_ire".encode(),
+            "apEndDate": "123_ire".encode(),
+            "suspensionDate": "123_ire".encode(),
+            "statementCreatedDate": "123_ire".encode(),
+        }
 
         london_additional_data = {
-                "contractId": "123_ldn".encode(),
-                "apStartDate": "123_ldn".encode(),
-                "apEndDate": "123_ldn".encode(),
-                "suspensionDate": "123_ldn".encode(),
-                "statementCreatedDate": "123_ldn".encode(),
-            }
+            "contractId": "123_ldn".encode(),
+            "apStartDate": "123_ldn".encode(),
+            "apEndDate": "123_ldn".encode(),
+            "suspensionDate": "123_ldn".encode(),
+            "statementCreatedDate": "123_ldn".encode(),
+        }
 
-        actual = dynamodb_format(nino, take_home_pay, ireland_additional_data, london_additional_data)
+        actual = dynamodb_format(
+            nino, take_home_pay, ireland_additional_data, london_additional_data
+        )
 
         assert actual == dynamo_data, f'Expected: "{expected}", Got: {actual}'
 

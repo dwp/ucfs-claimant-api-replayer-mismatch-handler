@@ -168,8 +168,12 @@ def dynamodb_format(
         "ap_end_date_ire": ireland_additional_data.get("apEndDate", "").decode(),
         "ap_start_date_ldn": london_additional_data.get("apStartDate", "").decode(),
         "ap_end_date_ldn": london_additional_data.get("apEndDate", "").decode(),
-        "suspension_date_ire": ireland_additional_data.get("suspensionDate", "").decode(),
-        "suspension_date_ldn": london_additional_data.get("suspensionDate", "").decode(),
+        "suspension_date_ire": ireland_additional_data.get(
+            "suspensionDate", ""
+        ).decode(),
+        "suspension_date_ldn": london_additional_data.get(
+            "suspensionDate", ""
+        ).decode(),
         "statement_created_date_ire": ireland_additional_data.get(
             "statementCreatedDate", ""
         ).decode(),
