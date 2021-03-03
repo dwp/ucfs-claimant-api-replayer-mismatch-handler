@@ -180,14 +180,20 @@ def dynamodb_format(
 
 
 def dynamodb_record_mismatch_record(ddb_table, data):
-    logger.info(
-        f'Recording mismatch record into DynamoDB", "ddb_record_mismatch_table": "{ddb_table}", '
-        f'"nino": {data["nino"]}'
-    )
+    try:
+        logger.info(f'Attempting to put item into DynamoDb", '
+                    f'"nino": "{data["nino"]}, "ddb_record_mismatch_table": "{ddb_table.name}"')
 
-    response = ddb_table.put_item(Item=data)
+        response = ddb_table.put_item(Item=data)
 
-    logger.info(f"Recorded mismatch record into DynamoDB, Response: {response}")
+        logger.info(f'Recorded mismatch record into DynamoDB", "response": "{response}')
+
+    except Exception as e:
+        logger.error(
+            f'Error attempting to put dynamoDB record", '
+            f'"table_name": "{ddb_table.name}", "exception": "{e}'
+        )
+        raise e
 
 
 def get_matches(ire_data: List[dict], ldn_data: List[dict]):
@@ -282,46 +288,28 @@ def handler(event, context):
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 
     for match in matches:
-        try:
-            dynamodb_data = dynamodb_format(
-                nino, take_home_pay, match["ire"], match["ldn"]
-            )
+        logger.info(f'Attempting to format into DynamoDb structure", "record": "{match}')
+        dynamodb_data = dynamodb_format(
+            nino, take_home_pay, match["ire"], match["ldn"]
+        )
 
-            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
-        except KeyError as e:
-            logger.error(
-                'Error attempting to build dynamoDB data", '
-                f'"ireland_row": "{match["ire"]}", "london_row": "{match["ldn"]}", '
-                f'"missing_key": "{e.args[0]}", "exception": "{e}'
-            )
-            continue
-
-        except Exception as e:
-            logger.error(
-                'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
-            )
-            continue
+        logger.info(
+            f'Recording mismatch record into DynamoDB",'
+            f'"ddb_record_mismatch_table": "{args.ddb_record_mismatch_table}", '
+            f'"nino": "{nino}'
+        )
+        dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
 
     for row in non_matches:
-        try:
-            dynamodb_data = dynamodb_format(nino, take_home_pay, row["ire"], row["ldn"])
+        logger.info(f'Attempting to format into DynamoDb structure", "record": "{row}')
+        dynamodb_data = dynamodb_format(nino, take_home_pay, row["ire"], row["ldn"])
 
-            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
-        except KeyError as e:
-            logger.error(
-                'Error attempting to build dynamoDB data", '
-                f'"ireland_row": "{row["ire"]}", "london_row": "{row["ldn"]}", '
-                f'"missing_key": "{e.args[0]}", "exception": "{e}'
-            )
-            continue
-
-        except Exception as e:
-            logger.error(
-                'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
-            )
-            continue
+        logger.info(
+            f'Recording mismatch record into DynamoDB",'
+            f'"ddb_record_mismatch_table": "{args.ddb_record_mismatch_table}", '
+            f'"nino": "{nino}'
+        )
+        dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
 
 
 if __name__ == "__main__":
