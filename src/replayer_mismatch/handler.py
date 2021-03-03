@@ -134,7 +134,9 @@ def get_parameter_store_value(parameter_name, region):
     ssm = boto3.client("ssm", region_name=region)
 
     try:
-        logger.info(f'Attempting to fetch parameter", "parameter_name": "{parameter_name}')
+        logger.info(
+            f'Attempting to fetch parameter", "parameter_name": "{parameter_name}'
+        )
         parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
         return parameter["Parameter"]["Value"]
     except Exception as e:
@@ -241,7 +243,7 @@ def handler(event, context):
         ireland_sql_password,
         args.ireland_database_name,
         args.use_ssl,
-        logger
+        logger,
     )
 
     ireland_additional_data = get_additional_record_data(nino, ireland_connection)
@@ -255,7 +257,7 @@ def handler(event, context):
         london_sql_password,
         args.london_database_name,
         args.use_ssl,
-        logger
+        logger,
     )
 
     london_additional_data = get_additional_record_data(nino, london_connection)
