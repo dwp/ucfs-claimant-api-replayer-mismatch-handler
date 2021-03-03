@@ -32,22 +32,6 @@ dynamo_data = {
     "statement_created_date_ldn": "123_ldn",
 }
 
-dynamo_attr_keys = [
-    "nino",
-    "statement_id",
-    "ap_end_date_ire",
-    "ap_end_date_ldn",
-    "ap_start_date_ire",
-    "ap_start_date_ldn",
-    "contract_id_ire",
-    "contract_id_ldn",
-    "decrypted_take_home_pay",
-    "statement_created_date_ire",
-    "statement_created_date_ldn",
-    "suspension_date_ire",
-    "suspension_date_ldn",
-]
-
 
 class TestHandler(unittest.TestCase):
     @mock_ssm
@@ -77,24 +61,27 @@ class TestHandler(unittest.TestCase):
             "statement_created_date_ldn": "123_ldn",
         }
 
+        nino = "123"
+        take_home_pay = "123"
+        ireland_additional_data = {
+            "statementId": "123_ire".encode(),
+            "contractId": "123_ire".encode(),
+            "apStartDate": "123_ire".encode(),
+            "apEndDate": "123_ire".encode(),
+            "suspensionDate": "123_ire".encode(),
+            "statementCreatedDate": "123_ire".encode(),
+        }
+
+        london_additional_data = {
+            "contractId": "123_ldn".encode(),
+            "apStartDate": "123_ldn".encode(),
+            "apEndDate": "123_ldn".encode(),
+            "suspensionDate": "123_ldn".encode(),
+            "statementCreatedDate": "123_ldn".encode(),
+        }
+
         actual = dynamodb_format(
-            "123",
-            "123",
-            {
-                "statementId": "123_ire",
-                "contractId": "123_ire",
-                "apStartDate": "123_ire",
-                "apEndDate": "123_ire",
-                "suspensionDate": "123_ire",
-                "statementCreatedDate": "123_ire",
-            },
-            {
-                "contractId": "123_ldn",
-                "apStartDate": "123_ldn",
-                "apEndDate": "123_ldn",
-                "suspensionDate": "123_ldn",
-                "statementCreatedDate": "123_ldn",
-            },
+            nino, take_home_pay, ireland_additional_data, london_additional_data
         )
 
         assert actual == dynamo_data, f'Expected: "{expected}", Got: {actual}'
