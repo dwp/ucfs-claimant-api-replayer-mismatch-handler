@@ -160,7 +160,7 @@ def dynamodb_format(
 
     return {
         "nino": nino,
-        "statement_id": statement_id,
+        "statement_id": statement_id.decode("utf-8"),
         "decrypted_take_home_pay": take_home_pay,
         "contract_id_ire": ireland_additional_data.get("contractId", ""),
         "contract_id_ldn": london_additional_data.get("contractId", ""),
