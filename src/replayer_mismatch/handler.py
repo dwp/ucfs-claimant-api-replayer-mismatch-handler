@@ -8,7 +8,7 @@ from typing import List
 
 import boto3
 
-from .query_rds import get_connection, get_additional_record_data
+from replayer_mismatch.query_rds import get_connection, get_additional_record_data
 
 
 def setup_logging(logger_level):
@@ -129,7 +129,7 @@ def get_parameter_store_value(parameter_name, region):
 
     try:
         logger.info(f'Attempting to fetch parameter", "parameter_name": "{parameter_name}')
-        parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=False)
+        parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=True)
         return parameter["Parameter"]["Value"]
     except Exception as e:
         logger.error(
@@ -205,10 +205,6 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
     return matches, non_matches
 
 
-args = None
-logger = None
-
-
 def handler(event, context):
     global args
     args = get_parameters()
@@ -235,6 +231,7 @@ def handler(event, context):
         ireland_sql_password,
         args.ireland_database_name,
         args.use_ssl,
+        logger
     )
 
     ireland_additional_data = get_additional_record_data(nino, ireland_connection)
@@ -248,6 +245,7 @@ def handler(event, context):
         london_sql_password,
         args.london_database_name,
         args.use_ssl,
+        logger
     )
 
     london_additional_data = get_additional_record_data(nino, london_connection)
@@ -321,3 +319,4 @@ if __name__ == "__main__":
         handler(json_content, None)
     except Exception as err:
         logger.error(f'Exception occurred for invocation", "error_message": "{err}')
+        raise err

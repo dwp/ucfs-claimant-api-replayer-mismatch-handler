@@ -1,22 +1,20 @@
 import mysql.connector
 import os
 
-logger = None
-
 
 def get_connection(
-    rds_endpoint: str, username: str, password: str, database_name: str, use_ssl: str
-):
+        rds_endpoint: str,
+        username: str,
+        password: str,
+        database_name: str,
+        use_ssl: str,
+        _logger):
     global logger
+    logger = _logger
 
     script_dir = os.path.dirname(__file__)
     rel_path = "rds-ca-2019-root.pem"
     abs_file_path = os.path.join(script_dir, rel_path)
-
-    if logger is None:
-        from .handler import logger as __logger
-
-        logger = __logger
 
     logger.info(f"Path to the CR cert is '{abs_file_path}'")
 
