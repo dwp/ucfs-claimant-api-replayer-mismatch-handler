@@ -160,22 +160,22 @@ def dynamodb_format(
 
     return {
         "nino": nino,
-        "statement_id": statement_id.decode("utf-8"),
+        "statement_id": statement_id.decode().strip(),
         "decrypted_take_home_pay": take_home_pay,
-        "contract_id_ire": ireland_additional_data.get("contractId", ""),
-        "contract_id_ldn": london_additional_data.get("contractId", ""),
-        "ap_start_date_ire": ireland_additional_data.get("apStartDate", ""),
-        "ap_end_date_ire": ireland_additional_data.get("apEndDate", ""),
-        "ap_start_date_ldn": london_additional_data.get("apStartDate", ""),
-        "ap_end_date_ldn": london_additional_data.get("apEndDate", ""),
-        "suspension_date_ire": ireland_additional_data.get("suspensionDate", ""),
-        "suspension_date_ldn": london_additional_data.get("suspensionDate", ""),
+        "contract_id_ire": ireland_additional_data.get("contractId", "").decode(),
+        "contract_id_ldn": london_additional_data.get("contractId", "").decode(),
+        "ap_start_date_ire": ireland_additional_data.get("apStartDate", "").decode(),
+        "ap_end_date_ire": ireland_additional_data.get("apEndDate", "").decode(),
+        "ap_start_date_ldn": london_additional_data.get("apStartDate", "").decode(),
+        "ap_end_date_ldn": london_additional_data.get("apEndDate", "").decode(),
+        "suspension_date_ire": ireland_additional_data.get("suspensionDate", "").decode(),
+        "suspension_date_ldn": london_additional_data.get("suspensionDate", "").decode(),
         "statement_created_date_ire": ireland_additional_data.get(
             "statementCreatedDate", ""
-        ),
+        ).decode(),
         "statement_created_date_ldn": london_additional_data.get(
             "statementCreatedDate", ""
-        ),
+        ).decode(),
     }
 
 
