@@ -4,7 +4,7 @@ import logging
 import os
 import socket
 import sys
-from typing import List
+from typing import List, Union
 
 import boto3
 
@@ -158,29 +158,40 @@ def dynamodb_format(
     else:
         statement_id = london_additional_data["statementId"]
 
+    contract_id_ire = _handle_type(ireland_additional_data.get("contractId", ""))
+    contract_id_ldn = _handle_type(london_additional_data.get("contractId", ""))
+
+    ap_start_date_ire = _handle_type(ireland_additional_data.get("apStartDate", ""))
+    ap_end_date_ire = _handle_type(ireland_additional_data.get("apEndDate", ""))
+
+    ap_start_date_ldn = _handle_type(london_additional_data.get("apStartDate", ""))
+    ap_end_date_ldn = _handle_type(london_additional_data.get("apEndDate", ""))
+
+    suspension_date_ire = _handle_type(ireland_additional_data.get("suspensionDate", ""))
+    suspension_date_ldn = _handle_type(london_additional_data.get("suspensionDate", ""))
+
+    statement_created_date_ire = _handle_type(ireland_additional_data.get("statementCreatedDate", ""))
+    statement_created_date_ldn = _handle_type(london_additional_data.get("statementCreatedDate", ""))
+
     return {
         "nino": nino,
         "statement_id": statement_id.decode().strip(),
         "decrypted_take_home_pay": take_home_pay,
-        "contract_id_ire": ireland_additional_data.get("contractId", "").decode(),
-        "contract_id_ldn": london_additional_data.get("contractId", "").decode(),
-        "ap_start_date_ire": ireland_additional_data.get("apStartDate", "").decode(),
-        "ap_end_date_ire": ireland_additional_data.get("apEndDate", "").decode(),
-        "ap_start_date_ldn": london_additional_data.get("apStartDate", "").decode(),
-        "ap_end_date_ldn": london_additional_data.get("apEndDate", "").decode(),
-        "suspension_date_ire": ireland_additional_data.get(
-            "suspensionDate", ""
-        ).decode(),
-        "suspension_date_ldn": london_additional_data.get(
-            "suspensionDate", ""
-        ).decode(),
-        "statement_created_date_ire": ireland_additional_data.get(
-            "statementCreatedDate", ""
-        ).decode(),
-        "statement_created_date_ldn": london_additional_data.get(
-            "statementCreatedDate", ""
-        ).decode(),
+        "contract_id_ire": contract_id_ire,
+        "contract_id_ldn": contract_id_ldn,
+        "ap_start_date_ire": ap_start_date_ire,
+        "ap_end_date_ire": ap_end_date_ire,
+        "ap_start_date_ldn": ap_start_date_ldn,
+        "ap_end_date_ldn": ap_end_date_ldn,
+        "suspension_date_ire": suspension_date_ire,
+        "suspension_date_ldn": suspension_date_ldn,
+        "statement_created_date_ire": statement_created_date_ire,
+        "statement_created_date_ldn": statement_created_date_ldn,
     }
+
+
+def _handle_type(variable: Union[str, bytes]):
+    return variable if not isinstance(variable, bytes) else variable.decode()
 
 
 def dynamodb_record_mismatch_record(ddb_table, data):
