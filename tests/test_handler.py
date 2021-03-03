@@ -32,22 +32,6 @@ dynamo_data = {
     "statement_created_date_ldn": "123_ldn",
 }
 
-dynamo_attr_keys = [
-    "nino",
-    "statement_id",
-    "ap_end_date_ire",
-    "ap_end_date_ldn",
-    "ap_start_date_ire",
-    "ap_start_date_ldn",
-    "contract_id_ire",
-    "contract_id_ldn",
-    "decrypted_take_home_pay",
-    "statement_created_date_ire",
-    "statement_created_date_ldn",
-    "suspension_date_ire",
-    "suspension_date_ldn",
-]
-
 
 class TestHandler(unittest.TestCase):
     @mock_ssm
