@@ -205,6 +205,10 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
     return matches, non_matches
 
 
+args = None
+logger = None
+
+
 def handler(event, context):
     global args
     args = get_parameters()
