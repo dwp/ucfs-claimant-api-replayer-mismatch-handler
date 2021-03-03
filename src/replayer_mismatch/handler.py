@@ -128,6 +128,7 @@ def get_parameter_store_value(parameter_name, region):
     ssm = boto3.client("ssm", region_name=region)
 
     try:
+        logger.info(f'Attempting to fetch parameter", "parameter_name": "{parameter_name}')
         parameter = ssm.get_parameter(Name=parameter_name, WithDecryption=False)
         return parameter["Parameter"]["Value"]
     except Exception as e:
