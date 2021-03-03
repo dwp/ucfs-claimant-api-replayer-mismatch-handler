@@ -167,11 +167,17 @@ def dynamodb_format(
     ap_start_date_ldn = _handle_type(london_additional_data.get("apStartDate", ""))
     ap_end_date_ldn = _handle_type(london_additional_data.get("apEndDate", ""))
 
-    suspension_date_ire = _handle_type(ireland_additional_data.get("suspensionDate", ""))
+    suspension_date_ire = _handle_type(
+        ireland_additional_data.get("suspensionDate", "")
+    )
     suspension_date_ldn = _handle_type(london_additional_data.get("suspensionDate", ""))
 
-    statement_created_date_ire = _handle_type(ireland_additional_data.get("statementCreatedDate", ""))
-    statement_created_date_ldn = _handle_type(london_additional_data.get("statementCreatedDate", ""))
+    statement_created_date_ire = _handle_type(
+        ireland_additional_data.get("statementCreatedDate", "")
+    )
+    statement_created_date_ldn = _handle_type(
+        london_additional_data.get("statementCreatedDate", "")
+    )
 
     return {
         "nino": nino,
