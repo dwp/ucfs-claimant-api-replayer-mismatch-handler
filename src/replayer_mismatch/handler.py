@@ -108,10 +108,10 @@ def get_parameters():
         _args.ddb_record_mismatch_table = os.environ["DDB_RECORD_MISMATCH_TABLE"]
 
     if "IRELAND_PARAMETER_REGION" in os.environ:
-        _args.ireland_parameter_region = os.environ["IRELAND_PARAMETER_REGION"]
+        _args.ireland_parameter_region = os.environ["IRELAND_PARAMETER_REGION"].lower()
 
     if "LONDON_PARAMETER_REGION" in os.environ:
-        _args.london_parameter_region = os.environ["LONDON_PARAMETER_REGION"]
+        _args.london_parameter_region = os.environ["LONDON_PARAMETER_REGION"].lower()
 
     required_args = ["log_level"]
 
@@ -273,7 +273,7 @@ def handler(event, context):
             f'"london_additional_data": "{london_additional_data} '
         )
 
-    table = boto3.client("dynamodb").Table(args.ddb_record_mismatch_table)
+    dynamo_table = boto3.resource("dynamodb").Table(args.ddb_record_mismatch_table)
 
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 
@@ -283,7 +283,7 @@ def handler(event, context):
                 nino, take_home_pay, match["ire"], match["ldn"]
             )
 
-            dynamodb_record_mismatch_record(table, dynamodb_data)
+            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
         except KeyError as e:
             logger.error(
                 'Error attempting to build dynamoDB data", '
@@ -295,7 +295,7 @@ def handler(event, context):
         except Exception as e:
             logger.error(
                 'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
+                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
             )
             continue
 
@@ -303,7 +303,7 @@ def handler(event, context):
         try:
             dynamodb_data = dynamodb_format(nino, take_home_pay, row["ire"], row["ldn"])
 
-            dynamodb_record_mismatch_record(table, dynamodb_data)
+            dynamodb_record_mismatch_record(dynamo_table, dynamodb_data)
         except KeyError as e:
             logger.error(
                 'Error attempting to build dynamoDB data", '
@@ -315,7 +315,7 @@ def handler(event, context):
         except Exception as e:
             logger.error(
                 'Error attempting to put dynamoDB record", '
-                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{table.name}", "exception": "{e}'
+                f'"dynamodb_data": "{dynamodb_data}", "table_name": "{dynamo_table.name}", "exception": "{e}'
             )
             continue
 
