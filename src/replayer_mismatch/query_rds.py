@@ -3,12 +3,13 @@ import os
 
 
 def get_connection(
-        rds_endpoint: str,
-        username: str,
-        password: str,
-        database_name: str,
-        use_ssl: str,
-        _logger):
+    rds_endpoint: str,
+    username: str,
+    password: str,
+    database_name: str,
+    use_ssl: str,
+    _logger,
+):
     global logger
     logger = _logger
 
