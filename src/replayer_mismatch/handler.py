@@ -181,7 +181,7 @@ def dynamodb_format(
 
     return {
         "nino": nino,
-        "statement_id": statement_id.decode().replace('"', ''),
+        "statement_id": statement_id.decode().replace('"', ""),
         "decrypted_take_home_pay": take_home_pay,
         "contract_id_ire": contract_id_ire,
         "contract_id_ldn": contract_id_ldn,
