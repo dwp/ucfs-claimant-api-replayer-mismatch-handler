@@ -7,3 +7,8 @@ This repo is a base to create new non-Terraform repos, adding the githooks submo
 
 After cloning this repo, please run:  
 `make bootstrap`
+
+# How to run
+
+Ensure a mismatch NINO across Ireland and England Claimant API RDS databases.
+Run `python3 src/replayer_mismatch/handler.py`. This will use the example event `resources/event.json`.
