@@ -185,8 +185,10 @@ def dynamodb_format(
 
 def dynamodb_record_mismatch_record(ddb_table, data):
     try:
-        logger.info(f'Attempting to put item into DynamoDb", '
-                    f'"nino": "{data["nino"]}, "ddb_record_mismatch_table": "{ddb_table.name}"')
+        logger.info(
+            f'Attempting to put item into DynamoDb", '
+            f'"nino": "{data["nino"]}, "ddb_record_mismatch_table": "{ddb_table.name}"'
+        )
 
         response = ddb_table.put_item(Item=data)
 
@@ -292,10 +294,10 @@ def handler(event, context):
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 
     for match in matches:
-        logger.info(f'Attempting to format into DynamoDb structure", "record": "{match}')
-        dynamodb_data = dynamodb_format(
-            nino, take_home_pay, match["ire"], match["ldn"]
+        logger.info(
+            f'Attempting to format into DynamoDb structure", "record": "{match}'
         )
+        dynamodb_data = dynamodb_format(nino, take_home_pay, match["ire"], match["ldn"])
 
         logger.info(
             f'Recording mismatch record into DynamoDB",'
