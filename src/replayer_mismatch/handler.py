@@ -177,6 +177,8 @@ def dynamodb_format(
     else:
         statement_id = london_additional_data["statementId"]
 
+    statement_id = _handle_type(statement_id)
+
     contract_id_ire = _handle_type(ireland_additional_data.get("contractId", ""))
     contract_id_ldn = _handle_type(london_additional_data.get("contractId", ""))
 
@@ -200,7 +202,7 @@ def dynamodb_format(
 
     return {
         "nino": nino,
-        "statement_id": statement_id.decode().replace('"', ""),
+        "statement_id": statement_id.replace('"', ""),
         "decrypted_take_home_pay": take_home_pay,
         "contract_id_ire": contract_id_ire,
         "contract_id_ldn": contract_id_ldn,
@@ -325,7 +327,7 @@ def handler(event, context):
             f'"london_additional_data": "{london_additional_data} '
         )
 
-    dynamo_table = boto3.resource("dynamodb").Table(args.ddb_record_mismatch_table)
+    dynamo_table = boto3.resource("dynamodb", args.aws_region).Table(args.ddb_record_mismatch_table)
 
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 
