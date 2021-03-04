@@ -326,7 +326,9 @@ def handler(event, context):
             f'"london_additional_data": "{london_additional_data} '
         )
 
-    dynamo_table = boto3.resource("dynamodb", args.aws_region).Table(args.ddb_record_mismatch_table)
+    dynamo_table = boto3.resource("dynamodb", args.aws_region).Table(
+        args.ddb_record_mismatch_table
+    )
 
     matches, non_matches = get_matches(ireland_additional_data, london_additional_data)
 

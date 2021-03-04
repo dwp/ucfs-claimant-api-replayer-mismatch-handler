@@ -13,7 +13,7 @@ from replayer_mismatch.handler import (
     dynamodb_format,
     dynamodb_record_mismatch_record,
     get_matches,
-    handler
+    handler,
 )
 
 replayer_mismatch.handler.logger = MagicMock()
@@ -53,7 +53,7 @@ mock_params.__dict__ = {
     "london_rds_hostname": "ldnDB.test",
     "london_rds_parameter": "test_ldn_rds_param",
     "london_rds_username": "testUser",
-    "use_ssl": "true"
+    "use_ssl": "true",
 }
 
 additional_record_data = {
@@ -90,7 +90,6 @@ def handle_mock_additional_record_data_non_matches(_, connection):
 
 
 class TestHandler(unittest.TestCase):
-
     @mock_ssm
     @mock_dynamodb2
     def test_handler_non_matches(self):
@@ -112,51 +111,72 @@ class TestHandler(unittest.TestCase):
             ProvisionedThroughput={"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
         )
 
-        with mock.patch("replayer_mismatch.handler.get_parameters") as mock_get_parameters, \
-                mock.patch("replayer_mismatch.handler.get_connection") as mock_get_connection, \
-                mock.patch("replayer_mismatch.handler.get_additional_record_data") as mock_get_additional_record_data:
+        with mock.patch(
+            "replayer_mismatch.handler.get_parameters"
+        ) as mock_get_parameters, mock.patch(
+            "replayer_mismatch.handler.get_connection"
+        ) as mock_get_connection, mock.patch(
+            "replayer_mismatch.handler.get_additional_record_data"
+        ) as mock_get_additional_record_data:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
-            mock_get_additional_record_data.side_effect = handle_mock_additional_record_data_non_matches
+            mock_get_additional_record_data.side_effect = (
+                handle_mock_additional_record_data_non_matches
+            )
 
-            handler({
-                "nino": "123",
-                "transaction_id": "42",
-                "take_home_pay": "123.45"
-            }, None)
+            handler(
+                {"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None
+            )
 
-            mock_get_connection.assert_has_calls([
-                mock.call("ireDB.test", "testUser", "test_value", "ireDB", "true", replayer_mismatch.handler.logger),
-                mock.call("ldnDB.test", "testUser", "test_value", "ldnDB", "true", replayer_mismatch.handler.logger),
-            ])
+            mock_get_connection.assert_has_calls(
+                [
+                    mock.call(
+                        "ireDB.test",
+                        "testUser",
+                        "test_value",
+                        "ireDB",
+                        "true",
+                        replayer_mismatch.handler.logger,
+                    ),
+                    mock.call(
+                        "ldnDB.test",
+                        "testUser",
+                        "test_value",
+                        "ldnDB",
+                        "true",
+                        replayer_mismatch.handler.logger,
+                    ),
+                ]
+            )
 
-            mock_get_additional_record_data.assert_has_calls([
-                mock.call("123", "mock_connection_ire"),
-                mock.call("123", "mock_connection_ldn"),
-            ])
+            mock_get_additional_record_data.assert_has_calls(
+                [
+                    mock.call("123", "mock_connection_ire"),
+                    mock.call("123", "mock_connection_ldn"),
+                ]
+            )
 
             ddb_table = boto3.resource("dynamodb", "eu-west-1").Table("mismatch-table")
 
             expected = {
-                'nino': '123',
-                'statement_id': '123_ire',
-                'decrypted_take_home_pay': '123.45',
-                'contract_id_ire': '123_ire',
-                'contract_id_ldn': '',
-                'ap_start_date_ire': '123_ire',
-                'ap_end_date_ire': '123_ire',
-                'ap_start_date_ldn': '',
-                'ap_end_date_ldn': '',
-                'suspension_date_ire': '123_ire',
-                'suspension_date_ldn': '',
-                'statement_created_date_ire': '123_ire',
-                'statement_created_date_ldn': ''
+                "nino": "123",
+                "statement_id": "123_ire",
+                "decrypted_take_home_pay": "123.45",
+                "contract_id_ire": "123_ire",
+                "contract_id_ldn": "",
+                "ap_start_date_ire": "123_ire",
+                "ap_end_date_ire": "123_ire",
+                "ap_start_date_ldn": "",
+                "ap_end_date_ldn": "",
+                "suspension_date_ire": "123_ire",
+                "suspension_date_ldn": "",
+                "statement_created_date_ire": "123_ire",
+                "statement_created_date_ldn": "",
             }
 
-            actual = ddb_table.get_item(Key={
-                "nino": "123",
-                "statement_id": "123_ire"
-            })["Item"]
+            actual = ddb_table.get_item(Key={"nino": "123", "statement_id": "123_ire"})[
+                "Item"
+            ]
 
             assert expected == actual
 
@@ -181,51 +201,72 @@ class TestHandler(unittest.TestCase):
             ProvisionedThroughput={"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
         )
 
-        with mock.patch("replayer_mismatch.handler.get_parameters") as mock_get_parameters, \
-                mock.patch("replayer_mismatch.handler.get_connection") as mock_get_connection, \
-                mock.patch("replayer_mismatch.handler.get_additional_record_data") as mock_get_additional_record_data:
+        with mock.patch(
+            "replayer_mismatch.handler.get_parameters"
+        ) as mock_get_parameters, mock.patch(
+            "replayer_mismatch.handler.get_connection"
+        ) as mock_get_connection, mock.patch(
+            "replayer_mismatch.handler.get_additional_record_data"
+        ) as mock_get_additional_record_data:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
-            mock_get_additional_record_data.side_effect = handle_mock_additional_record_data_matches
+            mock_get_additional_record_data.side_effect = (
+                handle_mock_additional_record_data_matches
+            )
 
-            handler({
-                "nino": "123",
-                "transaction_id": "42",
-                "take_home_pay": "123.45"
-            }, None)
+            handler(
+                {"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None
+            )
 
-            mock_get_connection.assert_has_calls([
-                mock.call("ireDB.test", "testUser", "test_value", "ireDB", "true", replayer_mismatch.handler.logger),
-                mock.call("ldnDB.test", "testUser", "test_value", "ldnDB", "true", replayer_mismatch.handler.logger),
-            ])
+            mock_get_connection.assert_has_calls(
+                [
+                    mock.call(
+                        "ireDB.test",
+                        "testUser",
+                        "test_value",
+                        "ireDB",
+                        "true",
+                        replayer_mismatch.handler.logger,
+                    ),
+                    mock.call(
+                        "ldnDB.test",
+                        "testUser",
+                        "test_value",
+                        "ldnDB",
+                        "true",
+                        replayer_mismatch.handler.logger,
+                    ),
+                ]
+            )
 
-            mock_get_additional_record_data.assert_has_calls([
-                mock.call("123", "mock_connection_ire"),
-                mock.call("123", "mock_connection_ldn"),
-            ])
+            mock_get_additional_record_data.assert_has_calls(
+                [
+                    mock.call("123", "mock_connection_ire"),
+                    mock.call("123", "mock_connection_ldn"),
+                ]
+            )
 
             ddb_table = boto3.resource("dynamodb", "eu-west-1").Table("mismatch-table")
 
             expected = {
-                'nino': '123',
-                'statement_id': '123',
-                'decrypted_take_home_pay': '123.45',
-                'contract_id_ire': '123_ire',
-                'contract_id_ldn': '123_ldn',
-                'ap_start_date_ire': '123_ire',
-                'ap_end_date_ire': '123_ire',
-                'ap_start_date_ldn': '123_ldn',
-                'ap_end_date_ldn': '123_ldn',
-                'suspension_date_ire': '123_ire',
-                'suspension_date_ldn': '123_ldn',
-                'statement_created_date_ire': '123_ire',
-                'statement_created_date_ldn': '123_ldn'
+                "nino": "123",
+                "statement_id": "123",
+                "decrypted_take_home_pay": "123.45",
+                "contract_id_ire": "123_ire",
+                "contract_id_ldn": "123_ldn",
+                "ap_start_date_ire": "123_ire",
+                "ap_end_date_ire": "123_ire",
+                "ap_start_date_ldn": "123_ldn",
+                "ap_end_date_ldn": "123_ldn",
+                "suspension_date_ire": "123_ire",
+                "suspension_date_ldn": "123_ldn",
+                "statement_created_date_ire": "123_ire",
+                "statement_created_date_ldn": "123_ldn",
             }
 
-            actual = ddb_table.get_item(Key={
-                "nino": "123",
-                "statement_id": "123"
-            })["Item"]
+            actual = ddb_table.get_item(Key={"nino": "123", "statement_id": "123"})[
+                "Item"
+            ]
 
             assert expected == actual
 
