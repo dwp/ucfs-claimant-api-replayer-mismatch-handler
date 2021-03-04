@@ -249,7 +249,7 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
         for ldn_row in ldn_data:
             if (
                 ire_row["nino"] == ldn_row["nino"]
-                and ire_row["statement_id"] == ldn_row["statement_id"]
+                and ire_row.get("statement_id", "") == ldn_row.get("statement_id", "")
             ):
                 matches.append({"ire": ire_row, "ldn": ldn_row})
 
