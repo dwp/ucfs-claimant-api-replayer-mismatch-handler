@@ -23,6 +23,7 @@ replayer_mismatch.handler.logger = MagicMock()
 dynamo_data = {
     "nino": "123",
     "statement_id": "123_ire",
+    "recorded_datetime": "2020-12-25T07:00:00",
     "decrypted_take_home_pay": "123",
     "contract_id_ire": "123_ire",
     "contract_id_ldn": "123_ldn",
@@ -117,12 +118,15 @@ class TestHandler(unittest.TestCase):
             "replayer_mismatch.handler.get_connection"
         ) as mock_get_connection, mock.patch(
             "replayer_mismatch.handler.get_additional_record_data"
-        ) as mock_get_additional_record_data:
+        ) as mock_get_additional_record_data, mock.patch(
+            "replayer_mismatch.handler.get_date_time"
+        ) as mock_datetime:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
             mock_get_additional_record_data.side_effect = (
                 handle_mock_additional_record_data_non_matches
             )
+            mock_datetime.return_value = "2020-01-25T19:30:00"
 
             handler(
                 {"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None
@@ -161,6 +165,7 @@ class TestHandler(unittest.TestCase):
             expected = {
                 "nino": "123",
                 "statement_id": "123_ire",
+                "recorded_datetime": "2020-01-25T19:30:00",
                 "decrypted_take_home_pay": "123.45",
                 "contract_id_ire": "123_ire",
                 "contract_id_ldn": "",
@@ -178,7 +183,7 @@ class TestHandler(unittest.TestCase):
                 "Item"
             ]
 
-            assert expected == actual
+            assert actual == expected
 
     @mock_ssm
     @mock_dynamodb2
@@ -207,12 +212,15 @@ class TestHandler(unittest.TestCase):
             "replayer_mismatch.handler.get_connection"
         ) as mock_get_connection, mock.patch(
             "replayer_mismatch.handler.get_additional_record_data"
-        ) as mock_get_additional_record_data:
+        ) as mock_get_additional_record_data, mock.patch(
+            "replayer_mismatch.handler.get_date_time"
+        ) as mock_datetime:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
             mock_get_additional_record_data.side_effect = (
                 handle_mock_additional_record_data_matches
             )
+            mock_datetime.return_value = "2020-12-25T09:30:00"
 
             handler(
                 {"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None
@@ -251,6 +259,7 @@ class TestHandler(unittest.TestCase):
             expected = {
                 "nino": "123",
                 "statement_id": "123",
+                "recorded_datetime": "2020-12-25T09:30:00",
                 "decrypted_take_home_pay": "123.45",
                 "contract_id_ire": "123_ire",
                 "contract_id_ldn": "123_ldn",
@@ -288,50 +297,103 @@ class TestHandler(unittest.TestCase):
         with self.assertRaises(ParamValidationError):
             get_parameter_store_value(b"test_param", "eu-west-1")
 
-    def test_dynamodb_format(self):
-        expected = {
-            "nino": "123",
-            "statement_id": "123_ire",
-            "decrypted_take_home_pay": "123",
-            "contract_id_ire": "123_ire",
-            "contract_id_ldn": "123_ldn",
-            "ap_start_date_ire": "123_ire",
-            "ap_end_date_ire": "123_ire",
-            "ap_start_date_ldn": "123_ldn",
-            "ap_end_date_ldn": "123_ldn",
-            "suspension_date_ire": "123_ire",
-            "suspension_date_ldn": "123_ldn",
-            "statement_created_date_ire": "123_ire",
-            "statement_created_date_ldn": "123_ldn",
-        }
+    def test_dynamodb_format_uses_ireland_statement_id_if_present(self):
+        with mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
+            mock_datetime.return_value = "2021-03-05T17:42:21"
 
-        nino = "123"
-        take_home_pay = "123"
-        ireland_additional_data = {
-            "statementId": "123_ire".encode(),
-            "contractId": "123_ire".encode(),
-            "apStartDate": "123_ire".encode(),
-            "apEndDate": "123_ire".encode(),
-            "suspensionDate": "123_ire".encode(),
-            "statementCreatedDate": "123_ire".encode(),
-        }
+            expected = {
+                "nino": "123",
+                "statement_id": "123_ire",
+                "recorded_datetime": "2021-03-05T17:42:21",
+                "decrypted_take_home_pay": "123",
+                "contract_id_ire": "123_ire",
+                "contract_id_ldn": "123_ldn",
+                "ap_start_date_ire": "123_ire",
+                "ap_end_date_ire": "123_ire",
+                "ap_start_date_ldn": "123_ldn",
+                "ap_end_date_ldn": "123_ldn",
+                "suspension_date_ire": "123_ire",
+                "suspension_date_ldn": "123_ldn",
+                "statement_created_date_ire": "123_ire",
+                "statement_created_date_ldn": "123_ldn",
+            }
 
-        london_additional_data = {
-            "contractId": "123_ldn".encode(),
-            "apStartDate": "123_ldn".encode(),
-            "apEndDate": "123_ldn".encode(),
-            "suspensionDate": "123_ldn".encode(),
-            "statementCreatedDate": "123_ldn".encode(),
-        }
+            nino = "123"
+            take_home_pay = "123"
+            ireland_additional_data = {
+                "statementId": "123_ire".encode(),
+                "contractId": "123_ire".encode(),
+                "apStartDate": "123_ire".encode(),
+                "apEndDate": "123_ire".encode(),
+                "suspensionDate": "123_ire".encode(),
+                "statementCreatedDate": "123_ire".encode(),
+            }
 
-        actual = dynamodb_format(
-            nino, take_home_pay, ireland_additional_data, london_additional_data
-        )
+            london_additional_data = {
+                "statementId": "123_ldn".encode(),
+                "contractId": "123_ldn".encode(),
+                "apStartDate": "123_ldn".encode(),
+                "apEndDate": "123_ldn".encode(),
+                "suspensionDate": "123_ldn".encode(),
+                "statementCreatedDate": "123_ldn".encode(),
+            }
 
-        assert actual == dynamo_data, f'Expected: "{expected}", Got: {actual}'
+            actual = dynamodb_format(
+                nino, take_home_pay, ireland_additional_data, london_additional_data
+            )
 
-    def test_dynamodb_format_missing_statement_id(self):
-        with self.assertRaises(KeyError):
+            assert actual == expected, f'Expected: "{expected}",\n Got: {actual}'
+
+    def test_dynamodb_format_uses_london_statement_id_if_ireland_missing(self):
+        with mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
+
+            mock_datetime.return_value = "2021-03-03T13:00:00"
+            expected = {
+                "nino": "123",
+                "statement_id": "123_ldn",
+                "recorded_datetime": "2021-03-03T13:00:00",
+                "decrypted_take_home_pay": "123",
+                "contract_id_ire": "123_ire",
+                "contract_id_ldn": "123_ldn",
+                "ap_start_date_ire": "123_ire",
+                "ap_end_date_ire": "123_ire",
+                "ap_start_date_ldn": "123_ldn",
+                "ap_end_date_ldn": "123_ldn",
+                "suspension_date_ire": "123_ire",
+                "suspension_date_ldn": "123_ldn",
+                "statement_created_date_ire": "123_ire",
+                "statement_created_date_ldn": "123_ldn",
+            }
+
+            nino = "123"
+            take_home_pay = "123"
+            ireland_additional_data = {
+                "contractId": "123_ire".encode(),
+                "apStartDate": "123_ire".encode(),
+                "apEndDate": "123_ire".encode(),
+                "suspensionDate": "123_ire".encode(),
+                "statementCreatedDate": "123_ire".encode(),
+            }
+
+            london_additional_data = {
+                "statementId": "123_ldn".encode(),
+                "contractId": "123_ldn".encode(),
+                "apStartDate": "123_ldn".encode(),
+                "apEndDate": "123_ldn".encode(),
+                "suspensionDate": "123_ldn".encode(),
+                "statementCreatedDate": "123_ldn".encode(),
+            }
+
+            actual = dynamodb_format(
+                nino, take_home_pay, ireland_additional_data, london_additional_data
+            )
+
+            assert actual == expected, f'Expected: "{expected}",\n Got: {actual}'
+
+    def test_dynamodb_format_sets_na_flag_with_time_for_statement_id_if_missing_from_both(self):
+        with mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
+            mock_datetime.return_value = "2021-03-05T18:00:00"
+
             nino = "123"
             take_home_pay = "123"
             ireland_additional_data = {
@@ -350,9 +412,11 @@ class TestHandler(unittest.TestCase):
                 "statementCreatedDate": "123_ldn".encode(),
             }
 
-            dynamodb_format(
+            result = dynamodb_format(
                 nino, take_home_pay, ireland_additional_data, london_additional_data
             )
+
+            assert result["statement_id"] == "null_2021-03-05T18:00:00"
 
     @mock_dynamodb2
     def test_dynamodb_record_mismatch_record(self):
@@ -382,6 +446,9 @@ class TestHandler(unittest.TestCase):
                 }
             )["Item"]
 
+            assert (
+                item["recorded_datetime"] == "2020-12-25T07:00:00"
+            ), f'Expected : "2020-12-25T07:00:00", Got: {item["recorded_datetime"]}'
             assert (
                 item["ap_start_date_ire"] == "123_ire"
             ), f'Expected : "123_ire", Got: {item["ap_start_date_ire"]}'

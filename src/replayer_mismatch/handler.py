@@ -4,6 +4,7 @@ import logging
 import os
 import socket
 import sys
+import datetime
 from typing import List, Union
 
 import boto3
@@ -166,6 +167,10 @@ def get_parameter_store_value(parameter_name, region):
         raise e
 
 
+def get_date_time():
+    return datetime.datetime.now().isoformat(timespec='seconds')
+
+
 def dynamodb_format(
     nino: str,
     take_home_pay: str,
@@ -174,8 +179,10 @@ def dynamodb_format(
 ):
     if ireland_additional_data.get("statementId", None) is not None:
         statement_id = ireland_additional_data["statementId"]
-    else:
+    elif london_additional_data.get("statementId", None) is not None:
         statement_id = london_additional_data["statementId"]
+    else:
+        statement_id = f"null_{get_date_time()}"
 
     statement_id = _handle_type(statement_id)
 
@@ -203,6 +210,7 @@ def dynamodb_format(
     return {
         "nino": nino,
         "statement_id": statement_id.replace('"', ""),
+        "recorded_datetime": get_date_time(),
         "decrypted_take_home_pay": take_home_pay,
         "contract_id_ire": contract_id_ire,
         "contract_id_ldn": contract_id_ldn,
