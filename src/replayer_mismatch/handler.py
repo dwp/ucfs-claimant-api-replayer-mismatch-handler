@@ -254,8 +254,10 @@ def get_matches(ire_data: List[dict], ldn_data: List[dict]):
             ) == ldn_row.get("statement_id", ""):
                 matches.append({"ire": ire_row, "ldn": ldn_row})
 
-                ire_copy.remove(ire_row)
-                ldn_copy.remove(ldn_row)
+                if ire_row in ire_copy:
+                    ire_copy.remove(ire_row)
+                if ldn_row in ldn_copy:
+                    ldn_copy.remove(ldn_row)
 
     for row in ire_copy:
         non_matches.append({"ire": row, "ldn": {}})
