@@ -168,7 +168,7 @@ def get_parameter_store_value(parameter_name, region):
 
 
 def get_date_time():
-    return datetime.datetime.now().isoformat(timespec='seconds')
+    return datetime.datetime.now().isoformat(timespec="seconds")
 
 
 def dynamodb_format(

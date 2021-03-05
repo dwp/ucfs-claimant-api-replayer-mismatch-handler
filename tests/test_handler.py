@@ -390,7 +390,9 @@ class TestHandler(unittest.TestCase):
 
             assert actual == expected, f'Expected: "{expected}",\n Got: {actual}'
 
-    def test_dynamodb_format_sets_na_flag_with_time_for_statement_id_if_missing_from_both(self):
+    def test_dynamodb_format_sets_na_flag_with_time_for_statement_id_if_missing_from_both(
+        self,
+    ):
         with mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
             mock_datetime.return_value = "2021-03-05T18:00:00"
 
