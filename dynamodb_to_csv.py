@@ -40,5 +40,5 @@ with open("claimant_mismatch.csv", "w", newline="") as csvfile:
         file = open("claimant_mismatch.json", "r")
         return json.loads(file.read())
 
-    json = load_json()
-    json_to_csv(json)
+    json_file = load_json()
+    json_to_csv(json_file)
