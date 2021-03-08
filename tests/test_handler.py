@@ -60,7 +60,7 @@ mock_params.__dict__ = {
 additional_record_data = {
     "nino": "123",
     "statementId": "123",
-    "contractId": "123",
+    "contract_id": "123",
     "apStartDate": "123",
     "apEndDate": "123",
     "suspensionDate": "123",
@@ -322,7 +322,7 @@ class TestHandler(unittest.TestCase):
             take_home_pay = "123"
             ireland_additional_data = {
                 "statementId": "123_ire".encode(),
-                "contractId": "123_ire".encode(),
+                "contract_id": "123_ire".encode(),
                 "apStartDate": "123_ire".encode(),
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
@@ -331,7 +331,7 @@ class TestHandler(unittest.TestCase):
 
             london_additional_data = {
                 "statementId": "123_ldn".encode(),
-                "contractId": "123_ldn".encode(),
+                "contract_id": "123_ldn".encode(),
                 "apStartDate": "123_ldn".encode(),
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
@@ -368,7 +368,7 @@ class TestHandler(unittest.TestCase):
             nino = "123"
             take_home_pay = "123"
             ireland_additional_data = {
-                "contractId": "123_ire".encode(),
+                "contract_id": "123_ire".encode(),
                 "apStartDate": "123_ire".encode(),
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
@@ -377,7 +377,7 @@ class TestHandler(unittest.TestCase):
 
             london_additional_data = {
                 "statementId": "123_ldn".encode(),
-                "contractId": "123_ldn".encode(),
+                "contract_id": "123_ldn".encode(),
                 "apStartDate": "123_ldn".encode(),
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
@@ -399,7 +399,7 @@ class TestHandler(unittest.TestCase):
             nino = "123"
             take_home_pay = "123"
             ireland_additional_data = {
-                "contractId": "123_ire".encode(),
+                "contract_id": "123_ire".encode(),
                 "apStartDate": "123_ire".encode(),
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
@@ -407,7 +407,7 @@ class TestHandler(unittest.TestCase):
             }
 
             london_additional_data = {
-                "contractId": "123_ldn".encode(),
+                "contract_id": "123_ldn".encode(),
                 "apStartDate": "123_ldn".encode(),
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),

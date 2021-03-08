@@ -186,8 +186,8 @@ def dynamodb_format(
 
     statement_id = _handle_type(statement_id)
 
-    contract_id_ire = _handle_type(ireland_additional_data.get("contractId", ""))
-    contract_id_ldn = _handle_type(london_additional_data.get("contractId", ""))
+    contract_id_ire = _handle_type(ireland_additional_data.get("contract_id", ""))
+    contract_id_ldn = _handle_type(london_additional_data.get("contract_id", ""))
 
     ap_start_date_ire = _handle_type(ireland_additional_data.get("apStartDate", ""))
     ap_end_date_ire = _handle_type(ireland_additional_data.get("apEndDate", ""))
