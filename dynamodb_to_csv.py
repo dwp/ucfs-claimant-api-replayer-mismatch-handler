@@ -15,10 +15,10 @@ field_names = [
     "suspension_date_ire",
     "suspension_date_ldn",
     "statement_created_date_ire",
-    "statement_created_date_ldn"
+    "statement_created_date_ldn",
 ]
 
-with open('claimant_mismatch.csv', 'w', newline='') as csvfile:
+with open("claimant_mismatch.csv", "w", newline="") as csvfile:
     csvwriter = csv.DictWriter(csvfile, fieldnames=field_names)
 
     csvwriter.writeheader()
