@@ -35,3 +35,13 @@ Set IRELAND_RDS_* & LONDON_RDS_* environment vars appropriately
 Ensure there are mismatching records across "Ireland" and "London" LOCAL Claimant API RDS databases for a matching NINO  
 Ensure you have correctly set all of the environment variables in the above table  
 Run `make run-local`, this will use the example event `resources/event.json`
+
+# Data analysis
+
+Fetch sample data for a given time period via AWS CLI. Replacing TABLE-NAME and PROFILE with the respective values.
+```
+aws dynamodb scan --table-name TABLE-NAME --filter-expression 'contains(recorded_datetime,:date)' --expression-attribute-values '{":date":{"S":"2021-03-06T"}}' --profile PROFILE --region eu-west-1 --output json > claimant_api.json
+```
+
+Run the `dynamodb_to_csv` script to convert the DynamoDb output to CSV for the mismatch dynamodb table structure.
+Send this CSV to UC via secure means.
