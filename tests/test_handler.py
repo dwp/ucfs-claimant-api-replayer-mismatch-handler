@@ -478,29 +478,29 @@ class TestHandler(unittest.TestCase):
     def test_get_matches(self):
         expected_matches = [
             {
-                "ire": {"nino": "123", "statement_id": "123"},
-                "ldn": {"nino": "123", "statement_id": "123"},
+                "ire": {"nino": "123", "statementId": "123"},
+                "ldn": {"nino": "123", "statementId": "123"},
             },
             {
-                "ire": {"nino": "321", "statement_id": "321"},
-                "ldn": {"nino": "321", "statement_id": "321"},
+                "ire": {"nino": "321", "statementId": "321"},
+                "ldn": {"nino": "321", "statementId": "321"},
             },
         ]
         expected_non_matches = [
-            {"ire": {"nino": "1234", "statement_id": "1234"}, "ldn": {}},
-            {"ire": {}, "ldn": {"nino": "4321", "statement_id": "4321"}},
+            {"ire": {"nino": "1234", "statementId": "1234"}, "ldn": {}},
+            {"ire": {}, "ldn": {"nino": "4321", "statementId": "4321"}},
         ]
 
         actual_matches, actual_non_matches = get_matches(
             [
-                {"nino": "123", "statement_id": "123"},
-                {"nino": "321", "statement_id": "321"},
-                {"nino": "1234", "statement_id": "1234"},
+                {"nino": "123", "statementId": "123"},
+                {"nino": "321", "statementId": "321"},
+                {"nino": "1234", "statementId": "1234"},
             ],
             [
-                {"nino": "123", "statement_id": "123"},
-                {"nino": "321", "statement_id": "321"},
-                {"nino": "4321", "statement_id": "4321"},
+                {"nino": "123", "statementId": "123"},
+                {"nino": "321", "statementId": "321"},
+                {"nino": "4321", "statementId": "4321"},
             ],
         )
 
@@ -515,19 +515,23 @@ class TestHandler(unittest.TestCase):
         with self.assertRaises(KeyError):
             get_matches(
                 [
-                    {"statement_id": "123"},
+                    {"statementId": "123"},
                 ],
                 [
-                    {"statement_id": "123"},
+                    {"statementId": "123"},
                 ],
             )
 
     def test_get_matches_missing_statement_id(self):
-        get_matches(
+        matches, non_matches = get_matches(
             [
                 {"nino": "123"},
+                {"nino": "345"},
             ],
             [
                 {"nino": "123"},
             ],
         )
+
+        assert matches == [{"ire": {"nino": "123"}, "ldn": {"nino": "123"}}]
+        assert non_matches == [{"ire": {"nino": "345"}, "ldn": {}}]
