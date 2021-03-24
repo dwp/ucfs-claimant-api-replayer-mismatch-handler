@@ -4,7 +4,6 @@ from Crypto.Cipher import AES
 
 def decrypted_data_key(kms_client, encrypted_key):
     cipher = base64.urlsafe_b64decode(encrypted_key)
-    print(cipher)
     decrypted_key_response = kms_client.decrypt(CiphertextBlob=cipher)
     return decrypted_key_response['Plaintext']
 
