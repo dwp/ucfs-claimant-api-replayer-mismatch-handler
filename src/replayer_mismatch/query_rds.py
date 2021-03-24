@@ -73,12 +73,14 @@ def get_additional_record_data(nino, connection, kms_client):
     cursor.close()
 
     for result in response:
-        if result['encrypted_take_home_pay']:
-            decrypted_key = decrypted_data_key(kms_client, result['encrypted_key'])
-            encrypted_take_home_pay = result['encrypted_take_home_pay']
-            take_home_pay = decrypted_take_home_pay(decrypted_key, encrypted_take_home_pay)
-            result['take_home_pay'] = take_home_pay
+        if result["encrypted_take_home_pay"]:
+            decrypted_key = decrypted_data_key(kms_client, result["encrypted_key"])
+            encrypted_take_home_pay = result["encrypted_take_home_pay"]
+            take_home_pay = decrypted_take_home_pay(
+                decrypted_key, encrypted_take_home_pay
+            )
+            result["take_home_pay"] = take_home_pay
         else:
-            result['take_home_pay'] = ""
+            result["take_home_pay"] = ""
 
     return response
