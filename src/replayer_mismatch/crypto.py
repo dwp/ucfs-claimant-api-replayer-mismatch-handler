@@ -5,7 +5,7 @@ from Crypto.Cipher import AES
 def decrypted_data_key(kms_client, encrypted_key):
     cipher = base64.urlsafe_b64decode(encrypted_key)
     decrypted_key_response = kms_client.decrypt(CiphertextBlob=cipher)
-    return decrypted_key_response['Plaintext']
+    return decrypted_key_response["Plaintext"]
 
 
 def decrypted_take_home_pay(decrypted_key, encrypted_take_home_pay):

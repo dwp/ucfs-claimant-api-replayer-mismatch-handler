@@ -65,7 +65,7 @@ additional_record_data = {
     "apEndDate": "123",
     "suspensionDate": "123",
     "statementCreatedDate": "123",
-    "take_home_pay": "123.45"
+    "take_home_pay": "123.45",
 }
 
 
@@ -113,10 +113,15 @@ class TestHandler(unittest.TestCase):
             ProvisionedThroughput={"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
         )
 
-        with mock.patch("replayer_mismatch.handler.get_parameters") as mock_get_parameters, \
-                mock.patch("replayer_mismatch.handler.get_connection") as mock_get_connection, \
-                mock.patch("replayer_mismatch.handler.get_additional_record_data") as mock_get_additional_record_data, \
-                mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
+        with mock.patch(
+            "replayer_mismatch.handler.get_parameters"
+        ) as mock_get_parameters, mock.patch(
+            "replayer_mismatch.handler.get_connection"
+        ) as mock_get_connection, mock.patch(
+            "replayer_mismatch.handler.get_additional_record_data"
+        ) as mock_get_additional_record_data, mock.patch(
+            "replayer_mismatch.handler.get_date_time"
+        ) as mock_datetime:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
             mock_get_additional_record_data.side_effect = (
@@ -124,7 +129,9 @@ class TestHandler(unittest.TestCase):
             )
             mock_datetime.return_value = "2020-01-25T19:30:00"
 
-            handler({"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None)
+            handler(
+                {"nino": "123", "transaction_id": "42", "take_home_pay": "123.45"}, None
+            )
 
             mock_get_connection.assert_has_calls(
                 [
@@ -202,10 +209,15 @@ class TestHandler(unittest.TestCase):
             ProvisionedThroughput={"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
         )
 
-        with mock.patch("replayer_mismatch.handler.get_parameters") as mock_get_parameters, \
-            mock.patch("replayer_mismatch.handler.get_connection") as mock_get_connection, \
-            mock.patch("replayer_mismatch.handler.get_additional_record_data") as mock_get_additional_record_data, \
-            mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
+        with mock.patch(
+            "replayer_mismatch.handler.get_parameters"
+        ) as mock_get_parameters, mock.patch(
+            "replayer_mismatch.handler.get_connection"
+        ) as mock_get_connection, mock.patch(
+            "replayer_mismatch.handler.get_additional_record_data"
+        ) as mock_get_additional_record_data, mock.patch(
+            "replayer_mismatch.handler.get_date_time"
+        ) as mock_datetime:
             mock_get_parameters.return_value = mock_params
             mock_get_connection.side_effect = handle_mock_get_connection
             mock_get_additional_record_data.side_effect = (
@@ -263,7 +275,7 @@ class TestHandler(unittest.TestCase):
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "123_ldn",
                 "thp_ire": "123.45_ire",
-                "thp_ldn": "123.45_ldn"
+                "thp_ldn": "123.45_ldn",
             }
 
             actual = ddb_table.get_item(Key={"nino": "123", "statement_id": "123"})[
@@ -322,7 +334,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
                 "statementCreatedDate": "123_ire",
-                "take_home_pay": "123.45_ire"
+                "take_home_pay": "123.45_ire",
             }
 
             london_additional_data = {
@@ -332,7 +344,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
                 "statementCreatedDate": "123_ldn",
-                "take_home_pay": "123.45_ldn"
+                "take_home_pay": "123.45_ldn",
             }
 
             actual = dynamodb_format(
@@ -360,7 +372,7 @@ class TestHandler(unittest.TestCase):
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "123_ldn",
                 "thp_ire": "123.45_ire",
-                "thp_ldn": "123.45_ldn"
+                "thp_ldn": "123.45_ldn",
             }
 
             nino = "123"
@@ -371,7 +383,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
                 "statementCreatedDate": "123_ire".encode(),
-                "take_home_pay": "123.45_ire"
+                "take_home_pay": "123.45_ire",
             }
 
             london_additional_data = {
@@ -381,7 +393,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
                 "statementCreatedDate": "123_ldn".encode(),
-                "take_home_pay": "123.45_ldn"
+                "take_home_pay": "123.45_ldn",
             }
 
             actual = dynamodb_format(

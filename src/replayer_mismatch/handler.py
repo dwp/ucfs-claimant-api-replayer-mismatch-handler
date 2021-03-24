@@ -223,7 +223,7 @@ def dynamodb_format(
         "statement_created_date_ire": statement_created_date_ire,
         "statement_created_date_ldn": statement_created_date_ldn,
         "thp_ire": ireland_additional_data.get("take_home_pay", ""),
-        "thp_ldn": london_additional_data.get("take_home_pay", "")
+        "thp_ldn": london_additional_data.get("take_home_pay", ""),
     }
 
 
@@ -311,8 +311,10 @@ def handler(event, context):
         logger,
     )
 
-    kms_client = boto3.client('kms')
-    ireland_additional_data = get_additional_record_data(nino, ireland_connection, kms_client)
+    kms_client = boto3.client("kms")
+    ireland_additional_data = get_additional_record_data(
+        nino, ireland_connection, kms_client
+    )
     london_sql_password = get_parameter_store_value(
         args.london_rds_parameter, args.london_parameter_region
     )
@@ -325,7 +327,9 @@ def handler(event, context):
         logger,
     )
 
-    london_additional_data = get_additional_record_data(nino, london_connection, kms_client)
+    london_additional_data = get_additional_record_data(
+        nino, london_connection, kms_client
+    )
 
     ire_len = len(ireland_additional_data)
     ldn_len = len(london_additional_data)
