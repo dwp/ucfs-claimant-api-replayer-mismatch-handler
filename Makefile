@@ -23,3 +23,14 @@ run-local:
   		export PYTHONPATH=$(shell pwd)/src; \
 		python src/replayer_mismatch/handler.py; \
 	}
+
+artefact:
+	rm -rf artifacts ucfs-claimant-api-replayer-mismatch-handler.zip
+	mkdir -p artifacts/replayer_mismatch
+	pip install -r requirements.txt -t artifacts
+	cp src/replayer_mismatch/*.py artifacts/replayer_mismatch
+	cp rds-ca-2019-root.pem artifacts/replayer_mismatch
+	@{ \
+		cd ./artifacts; \
+		zip -qq -r ../ucfs-claimant-api-replayer-mismatch-handler.zip *; \
+	}

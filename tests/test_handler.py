@@ -1,11 +1,11 @@
 import unittest
 from argparse import Namespace
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, ANY
 
 import boto3
 from botocore.exceptions import ParamValidationError, ClientError
-from moto import mock_ssm, mock_dynamodb2
+from moto import mock_ssm, mock_dynamodb2, mock_kms
 
 import replayer_mismatch.handler
 from replayer_mismatch.handler import (
@@ -65,6 +65,7 @@ additional_record_data = {
     "apEndDate": "123",
     "suspensionDate": "123",
     "statementCreatedDate": "123",
+    "take_home_pay": "123.45",
 }
 
 
@@ -72,7 +73,7 @@ def handle_mock_get_connection(hostname, *_):
     return "mock_connection_ire" if "ire" in hostname.lower() else "mock_connection_ldn"
 
 
-def handle_mock_additional_record_data_matches(_, connection):
+def handle_mock_additional_record_data_matches(_, connection, __):
     suffix = "ire" if "ire" in connection else "ldn"
     ret = {}
     for k, v in additional_record_data.items():
@@ -85,7 +86,7 @@ def handle_mock_additional_record_data_matches(_, connection):
     return [ret]
 
 
-def handle_mock_additional_record_data_non_matches(_, connection):
+def handle_mock_additional_record_data_non_matches(_, connection, __):
     suffix = "ire" if "ire" in connection else "ldn"
     return [{k: f"{v}_{suffix}" for k, v in additional_record_data.items()}]
 
@@ -155,8 +156,8 @@ class TestHandler(unittest.TestCase):
 
             mock_get_additional_record_data.assert_has_calls(
                 [
-                    mock.call("123", "mock_connection_ire"),
-                    mock.call("123", "mock_connection_ldn"),
+                    mock.call("123", "mock_connection_ire", ANY),
+                    mock.call("123", "mock_connection_ldn", ANY),
                 ]
             )
 
@@ -177,6 +178,8 @@ class TestHandler(unittest.TestCase):
                 "suspension_date_ldn": "",
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "",
+                "thp_ire": "123.45_ire",
+                "thp_ldn": "",
             }
 
             actual = ddb_table.get_item(Key={"nino": "123", "statement_id": "123_ire"})[
@@ -249,8 +252,8 @@ class TestHandler(unittest.TestCase):
 
             mock_get_additional_record_data.assert_has_calls(
                 [
-                    mock.call("123", "mock_connection_ire"),
-                    mock.call("123", "mock_connection_ldn"),
+                    mock.call("123", "mock_connection_ire", ANY),
+                    mock.call("123", "mock_connection_ldn", ANY),
                 ]
             )
 
@@ -271,6 +274,8 @@ class TestHandler(unittest.TestCase):
                 "suspension_date_ldn": "123_ldn",
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "123_ldn",
+                "thp_ire": "123.45_ire",
+                "thp_ldn": "123.45_ldn",
             }
 
             actual = ddb_table.get_item(Key={"nino": "123", "statement_id": "123"})[
@@ -316,6 +321,8 @@ class TestHandler(unittest.TestCase):
                 "suspension_date_ldn": "123_ldn",
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "123_ldn",
+                "thp_ire": "123.45_ire",
+                "thp_ldn": "123.45_ldn",
             }
 
             nino = "123"
@@ -326,7 +333,8 @@ class TestHandler(unittest.TestCase):
                 "apStartDate": "123_ire".encode(),
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
-                "statementCreatedDate": "123_ire".encode(),
+                "statementCreatedDate": "123_ire",
+                "take_home_pay": "123.45_ire",
             }
 
             london_additional_data = {
@@ -335,13 +343,13 @@ class TestHandler(unittest.TestCase):
                 "apStartDate": "123_ldn".encode(),
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
-                "statementCreatedDate": "123_ldn".encode(),
+                "statementCreatedDate": "123_ldn",
+                "take_home_pay": "123.45_ldn",
             }
 
             actual = dynamodb_format(
                 nino, take_home_pay, ireland_additional_data, london_additional_data
             )
-
             assert actual == expected, f'Expected: "{expected}",\n Got: {actual}'
 
     def test_dynamodb_format_uses_london_statement_id_if_ireland_missing(self):
@@ -363,6 +371,8 @@ class TestHandler(unittest.TestCase):
                 "suspension_date_ldn": "123_ldn",
                 "statement_created_date_ire": "123_ire",
                 "statement_created_date_ldn": "123_ldn",
+                "thp_ire": "123.45_ire",
+                "thp_ldn": "123.45_ldn",
             }
 
             nino = "123"
@@ -373,6 +383,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ire".encode(),
                 "suspensionDate": "123_ire".encode(),
                 "statementCreatedDate": "123_ire".encode(),
+                "take_home_pay": "123.45_ire",
             }
 
             london_additional_data = {
@@ -382,6 +393,7 @@ class TestHandler(unittest.TestCase):
                 "apEndDate": "123_ldn".encode(),
                 "suspensionDate": "123_ldn".encode(),
                 "statementCreatedDate": "123_ldn".encode(),
+                "take_home_pay": "123.45_ldn",
             }
 
             actual = dynamodb_format(

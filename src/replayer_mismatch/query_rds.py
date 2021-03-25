@@ -1,6 +1,8 @@
 import mysql.connector
 import os
 
+from replayer_mismatch.crypto import decrypted_data_key, decrypted_take_home_pay
+
 
 def get_connection(
     rds_endpoint: str,
@@ -29,7 +31,7 @@ def get_connection(
     )
 
 
-def get_additional_record_data(nino, connection):
+def get_additional_record_data(nino, connection, kms_client):
     query = f"""
     SELECT
       claimant.nino,
@@ -38,7 +40,10 @@ def get_additional_record_data(nino, connection):
       statement.data->'$.assessmentPeriod.startDate' AS apStartDate,
       statement.data->'$.assessmentPeriod.endDate' AS apEndDate,
       statement.data->>'$.createdDateTime.$date' statementCreatedDate,
-      statement.data->'$._id.statementId' AS statementId
+      statement.data->'$._id.statementId' AS statementId,
+      statement.data->>'$.encryptedTakeHomePay.takeHomePay' as encrypted_take_home_pay,
+      statement.data->>'$.encryptedTakeHomePay.cipherTextBlob' as encrypted_key,
+      statement.data->>'$.encryptedTakeHomePay.keyId' as encrypting_key_id
     FROM claimant
     LEFT JOIN contract ON claimant.citizen_id = contract.citizen_a
     LEFT JOIN statement ON statement.contract_id = contract.contract_id
@@ -50,7 +55,10 @@ def get_additional_record_data(nino, connection):
       statement.data->'$.assessmentPeriod.startDate' AS apStartDate,
       statement.data->'$.assessmentPeriod.endDate' AS apEndDate,
       statement.data->>'$.createdDateTime.$date' statementCreatedDate,
-      statement.data->'$._id.statementId' AS statementId
+      statement.data->'$._id.statementId' AS statementId,
+      statement.data->>'$.encryptedTakeHomePay.takeHomePay' as encrypted_take_home_pay,
+      statement.data->>'$.encryptedTakeHomePay.cipherTextBlob' as encrypted_key,
+      statement.data->>'$.encryptedTakeHomePay.keyId' as encrypting_key_id
     FROM claimant
     LEFT JOIN contract ON claimant.citizen_id = contract.citizen_b
     LEFT JOIN statement ON statement.contract_id = contract.contract_id
@@ -61,9 +69,18 @@ def get_additional_record_data(nino, connection):
     cursor = connection.cursor(dictionary=True)
     cursor.execute(query)
     logger.info("Executed: {}".format(query))
-
     response = cursor.fetchall()
-
     cursor.close()
+
+    for result in response:
+        if result["encrypted_take_home_pay"]:
+            decrypted_key = decrypted_data_key(kms_client, result["encrypted_key"])
+            encrypted_take_home_pay = result["encrypted_take_home_pay"]
+            take_home_pay = decrypted_take_home_pay(
+                decrypted_key, encrypted_take_home_pay
+            )
+            result["take_home_pay"] = take_home_pay
+        else:
+            result["take_home_pay"] = ""
 
     return response
