@@ -17,7 +17,7 @@ field_names = [
     "statement_created_date_ire",
     "statement_created_date_ldn",
     "thp_ire",
-    "thp_ldn"
+    "thp_ldn",
 ]
 
 with open("claimant_mismatch.csv", "w", newline="") as csvfile:
