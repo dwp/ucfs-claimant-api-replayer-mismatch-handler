@@ -311,9 +311,9 @@ def handler(event, context):
         logger,
     )
 
-    kms_client = boto3.client("kms")
+    ireland_kms_client = boto3.client("kms", region_name="eu-west-1")
     ireland_additional_data = get_additional_record_data(
-        nino, ireland_connection, kms_client
+        nino, ireland_connection, ireland_kms_client
     )
     london_sql_password = get_parameter_store_value(
         args.london_rds_parameter, args.london_parameter_region
@@ -327,8 +327,9 @@ def handler(event, context):
         logger,
     )
 
+    london_kms_client = boto3.client("kms", region_name="eu-west-2")
     london_additional_data = get_additional_record_data(
-        nino, london_connection, kms_client
+        nino, london_connection, london_kms_client
     )
 
     ire_len = len(ireland_additional_data)
