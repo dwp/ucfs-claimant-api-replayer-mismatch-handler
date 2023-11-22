@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # UCFS Claimant API Replayer Mismatch Handler
 
 ## An AWS lambda which receives a payload of mismatch records from the replayer lambda, collects additional data from both databases and records in DynamoDb for reporting purposes.
