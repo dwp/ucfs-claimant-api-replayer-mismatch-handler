@@ -354,7 +354,6 @@ class TestHandler(unittest.TestCase):
 
     def test_dynamodb_format_uses_london_statement_id_if_ireland_missing(self):
         with mock.patch("replayer_mismatch.handler.get_date_time") as mock_datetime:
-
             mock_datetime.return_value = "2021-03-03T13:00:00"
             expected = {
                 "nino": "123",
